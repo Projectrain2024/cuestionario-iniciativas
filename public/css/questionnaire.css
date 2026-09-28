@@ -1,0 +1,294 @@
+/* ──────────────────────────────────────────────────── */
+/* Questionnaire Page Styles                            */
+/* ──────────────────────────────────────────────────── */
+
+.questionnaire-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-light);
+}
+
+.progress-bar {
+  height: 4px;
+  background: var(--border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.questionnaire-header {
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow);
+  margin-top: 4px;
+}
+
+.questionnaire-header h1 {
+  font-size: 24px;
+  color: var(--primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.save-status {
+  font-size: 12px;
+  color: var(--success);
+  font-weight: 600;
+  min-width: 100px;
+  text-align: right;
+}
+
+.team-name {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.questionnaire-form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.form-section {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.form-section.visible {
+  display: block;
+  opacity: 1;
+}
+
+.section-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.section-header h2 {
+  font-size: 20px;
+  color: var(--text-dark);
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group textarea {
+  min-height: 100px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input.readonly-input {
+  background: var(--bg-light);
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* ──────────────────────────────────────────────────── */
+/* Dynamic Tables                                        */
+/* ──────────────────────────────────────────────────── */
+
+.dynamic-table {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 50px;
+  gap: 12px;
+  background: var(--bg-light);
+  padding: 12px;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 50px;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.table-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* 2-column tables for Riesgos */
+.dynamic-table:has([name="riesgo"]) .table-header {
+  grid-template-columns: 1fr 1fr 50px;
+}
+
+.dynamic-table:has([name="riesgo"]) .table-row {
+  grid-template-columns: 1fr 1fr 50px;
+}
+
+/* ──────────────────────────────────────────────────── */
+/* Navigation Buttons                                    */
+/* ──────────────────────────────────────────────────── */
+
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  flex: 1;
+}
+
+.btn.hidden {
+  display: none;
+}
+
+/* ──────────────────────────────────────────────────── */
+/* Responsive                                            */
+/* ──────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .questionnaire-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .header-right {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .questionnaire-header h1 {
+    font-size: 20px;
+  }
+
+  .questionnaire-form {
+    padding: 20px 16px;
+  }
+
+  .section-header h2 {
+    font-size: 18px;
+  }
+
+  .checkbox-group {
+    grid-template-columns: 1fr;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+
+  .table-header > div,
+  .table-row > button {
+    display: none;
+  }
+
+  .table-row input {
+    display: block;
+  }
+
+  .form-navigation {
+    flex-direction: column;
+  }
+
+  .form-navigation .btn {
+    width: 100%;
+  }
+}

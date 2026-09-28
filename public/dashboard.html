@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Cuestionario</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <h1>📊 Dashboard</h1>
+        <div class="header-actions">
+          <a href="/" class="btn btn-secondary">← Atrás</a>
+          <button id="exportJsonBtn" class="btn btn-primary">📥 Descargar JSON</button>
+          <button id="exportExcelBtn" class="btn btn-success">📊 Descargar Excel</button>
+          <a href="/logout" class="btn btn-danger">Salir</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div style="max-width: 1400px; margin: 0 auto;">
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <div style="font-size: 32px; font-weight: bold; color: #667eea;" id="totalQuestionnaires">-</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">Cuestionarios Completados</div>
+          </div>
+        </div>
+
+        <!-- Impactos -->
+        <section style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+          <h2 style="margin-bottom: 16px;">🎯 Impactos Más Frecuentes</h2>
+          <div id="impactosChart"></div>
+        </section>
+
+        <!-- Recursos -->
+        <section style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+          <h2 style="margin-bottom: 16px;">🛠️ Recursos Solicitados</h2>
+          <div id="recursosChart"></div>
+        </section>
+
+        <!-- Recent Responses Table -->
+        <section style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+          <h2 style="margin-bottom: 16px;">📋 Respuestas Recientes</h2>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <thead style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+              <tr>
+                <th style="padding: 12px; text-align: left;">Equipo</th>
+                <th style="padding: 12px; text-align: left;">Iniciativa</th>
+                <th style="padding: 12px; text-align: left;">Líder</th>
+                <th style="padding: 12px; text-align: left;">Fecha Envío</th>
+              </tr>
+            </thead>
+            <tbody id="responsesTable"></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        // Load patterns
+        const patRes = await fetch('/api/analytics/patterns');
+        if (!patRes.ok) throw new Error('Failed to load patterns');
+        const patterns = await patRes.json();
+
+        // Update KPIs
+        document.getElementById('totalQuestionnaires').textContent = patterns.total_cuestionarios;
+
+        // Render impactos
+        const impactosHtml = Object.entries(patterns.impactos || {})
+          .sort((a, b) => b[1] - a[1])
+          .map(([impact, count]) => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+              <span>${impact}</span>
+              <span style="font-weight: bold; color: #667eea;">${count}</span>
+            </div>
+          `).join('');
+        document.getElementById('impactosChart').innerHTML = impactosHtml || '<p style="color: #6b7280;">Sin datos</p>';
+
+        // Render recursos
+        const recursosHtml = Object.entries(patterns.recursos || {})
+          .sort((a, b) => b[1] - a[1])
+          .map(([recurso, count]) => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+              <span>${recurso}</span>
+              <span style="font-weight: bold; color: #667eea;">${count}</span>
+            </div>
+          `).join('');
+        document.getElementById('recursosChart').innerHTML = recursosHtml || '<p style="color: #6b7280;">Sin datos</p>';
+
+        // Render recent responses
+        const responsesHtml = (patterns.cuestionarios_recientes || [])
+          .map(q => {
+            const resp = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
+            return `
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding: 12px;">${escapeHtml(resp.nombre_equipo || '-')}</td>
+                <td style="padding: 12px;">${escapeHtml(resp.nombre_iniciativa || '-')}</td>
+                <td style="padding: 12px;">${escapeHtml(resp.lider_equipo || '-')}</td>
+                <td style="padding: 12px;">${new Date(q.submitted_at).toLocaleDateString('es-ES')}</td>
+              </tr>
+            `;
+          }).join('');
+        document.getElementById('responsesTable').innerHTML = responsesHtml || '<tr><td colspan="4" style="padding: 12px; text-align: center; color: #6b7280;">Sin respuestas</td></tr>';
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        alert('Error al cargar el dashboard');
+      }
+    }
+
+    // Export functions
+    document.getElementById('exportJsonBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/export/json', { method: 'POST' });
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cuestionarios.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert('Error al exportar JSON');
+      }
+    });
+
+    document.getElementById('exportExcelBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/export/excel', { method: 'POST' });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cuestionarios.xlsx';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        alert('Error al exportar Excel');
+      }
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+    // Refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>

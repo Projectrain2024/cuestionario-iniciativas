@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuestionario — Iniciativas Estratégicas</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/questionnaire.css">
+</head>
+<body>
+  <div class="questionnaire-container">
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="questionnaire-header">
+      <h1>📋 Cuestionario de Iniciativas Estratégicas</h1>
+      <div class="header-right">
+        <span id="saveStatus" class="save-status">Guardando...</span>
+        <span id="teamName" class="team-name"></span>
+      </div>
+    </header>
+
+    <!-- Form Container -->
+    <main class="questionnaire-form">
+      <form id="questionnaireForm">
+        <!-- Info Básica -->
+        <section class="form-section visible" data-section="0">
+          <div class="section-header">
+            <h2>📝 Información Básica</h2>
+          </div>
+
+          <div class="form-group">
+            <label>Nombre del Equipo</label>
+            <input type="text" id="teamNameInput" readonly class="readonly-input">
+          </div>
+
+          <div class="form-group">
+            <label>Nombre de la Iniciativa/Propuesta *</label>
+            <input type="text" id="nombreIniciativa" required>
+          </div>
+
+          <div class="form-group">
+            <label>Líder del Equipo *</label>
+            <input type="text" id="liderEquipo" required>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha *</label>
+            <input type="date" id="fecha" required>
+          </div>
+        </section>
+
+        <!-- Reto de Negocio -->
+        <section class="form-section" data-section="1">
+          <div class="section-header">
+            <h2>🎯 El Reto de Negocio</h2>
+          </div>
+
+          <div class="form-group">
+            <label>¿Qué problema u oportunidad queremos abordar? *</label>
+            <textarea id="retoProblem" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Detalle de evidencias *</label>
+            <textarea id="retoevidencia" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Impacto actual (selecciona todos los que apliquen) *</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="impactos" value="Productividad"> Productividad</label>
+              <label><input type="checkbox" name="impactos" value="Clientes"> Clientes</label>
+              <label><input type="checkbox" name="impactos" value="Ventas"> Ventas</label>
+              <label><input type="checkbox" name="impactos" value="Costos"> Costos</label>
+              <label><input type="checkbox" name="impactos" value="Talento"> Talento</label>
+              <label><input type="checkbox" name="impactos" value="Iniciativa"> Iniciativa</label>
+              <label><input type="checkbox" name="impactos" value="Proyecto"> Proyecto</label>
+              <label><input type="checkbox" name="impactos" value="Otro"> Otro</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Ampliar la descripción *</label>
+            <textarea id="retoDesc" required></textarea>
+          </div>
+        </section>
+
+        <!-- Solución -->
+        <section class="form-section" data-section="2">
+          <div class="section-header">
+            <h2>💡 La Solución</h2>
+          </div>
+
+          <div class="form-group">
+            <label>¿Qué proponemos? *</label>
+            <textarea id="solucionPropuesta" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>¿Qué hace diferente esta iniciativa? *</label>
+            <textarea id="solucionDiferencia" required></textarea>
+          </div>
+        </section>
+
+        <!-- Impacto Esperado -->
+        <section class="form-section" data-section="3">
+          <div class="section-header">
+            <h2>📊 Impacto Esperado</h2>
+          </div>
+
+          <div id="impactoTable" class="dynamic-table">
+            <div class="table-header">
+              <div>Resultado Esperado</div>
+              <div>Indicador</div>
+              <div>Meta</div>
+              <div></div>
+            </div>
+            <div id="impactoRows"></div>
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="addImpactoRow()">+ Agregar Fila</button>
+        </section>
+
+        <!-- Recursos -->
+        <section class="form-section" data-section="4">
+          <div class="section-header">
+            <h2>🛠️ Recursos Necesarios</h2>
+          </div>
+
+          <div class="form-group">
+            <label>¿Qué necesitamos? (selecciona todos los que apliquen) *</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="recursos" value="Tiempo"> Tiempo</label>
+              <label><input type="checkbox" name="recursos" value="Presupuesto"> Presupuesto</label>
+              <label><input type="checkbox" name="recursos" value="Personas"> Personas</label>
+              <label><input type="checkbox" name="recursos" value="Tecnología"> Tecnología</label>
+              <label><input type="checkbox" name="recursos" value="Formación"> Formación</label>
+              <label><input type="checkbox" name="recursos" value="Patrocinio"> Patrocinio</label>
+              <label><input type="checkbox" name="recursos" value="Otro"> Otro</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Detalle *</label>
+            <textarea id="recursosDetalle" required></textarea>
+          </div>
+        </section>
+
+        <!-- Riesgos -->
+        <section class="form-section" data-section="5">
+          <div class="section-header">
+            <h2>⚠️ Posibles Riesgos</h2>
+          </div>
+
+          <div id="riesgosTable" class="dynamic-table">
+            <div class="table-header">
+              <div>Riesgo</div>
+              <div>Acción de Mitigación</div>
+              <div></div>
+            </div>
+            <div id="riesgosRows"></div>
+          </div>
+          <button type="button" class="btn btn-secondary" onclick="addRiesgoRow()">+ Agregar Fila</button>
+        </section>
+
+        <!-- Necesidades Adicionales -->
+        <section class="form-section" data-section="6">
+          <div class="section-header">
+            <h2>📌 Necesidades Adicionales</h2>
+          </div>
+
+          <div class="form-group">
+            <label>Notas y requerimientos adicionales</label>
+            <textarea id="necesidadesAdicionales"></textarea>
+          </div>
+        </section>
+
+        <!-- Navigation -->
+        <div class="form-navigation">
+          <button type="button" id="prevBtn" class="btn btn-secondary" onclick="previousSection()">← Anterior</button>
+          <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextSection()">Siguiente →</button>
+          <button type="submit" id="submitBtn" class="btn btn-success hidden">✓ Enviar Cuestionario</button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="/js/questionnaire.js"></script>
+</body>
+</html>

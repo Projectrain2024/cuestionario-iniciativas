@@ -169,6 +169,124 @@ app.post('/api/teams/:id/generate-link', requireAuth, async (req, res) => {
   }
 });
 
+/* ── API: Questionnaires ────────────────────────────── */
+app.get('/api/questionnaires/:id', validateToken, async (req, res) => {
+  try {
+    const q = await db.getQuestionnaire(req.params.id);
+    if (!q || q.access_token !== req.headers.authorization?.replace('Bearer ', '')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    res.json(q);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch('/api/questionnaires/:id/responses', validateToken, async (req, res) => {
+  try {
+    const q = await db.getQuestionnaire(req.params.id);
+    if (!q || q.access_token !== req.headers.authorization?.replace('Bearer ', '')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const updated = await db.updateQuestionnaireResponses(req.params.id, req.body);
+    res.json({ ok: true, updated_at: updated.updated_at });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/questionnaires/:id/submit', validateToken, async (req, res) => {
+  try {
+    const q = await db.getQuestionnaire(req.params.id);
+    if (!q || q.access_token !== req.headers.authorization?.replace('Bearer ', '')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const submitted = await db.submitQuestionnaire(req.params.id);
+    res.json({ ok: true, status: submitted.status });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/questionnaires', requireAuth, async (req, res) => {
+  try {
+    const qs = await db.getSubmittedQuestionnaires();
+    res.json(qs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ── API: Analytics ────────────────────────────────── */
+app.get('/api/analytics/patterns', requireAuth, async (req, res) => {
+  try {
+    const qs = await db.getSubmittedQuestionnaires();
+
+    // Agregaciones básicas
+    const impactos = {};
+    const recursos = {};
+
+    qs.forEach(q => {
+      const resp = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
+      (resp.reto?.impactos || []).forEach(i => {
+        impactos[i] = (impactos[i] || 0) + 1;
+      });
+      (resp.recursos?.tipos || []).forEach(r => {
+        recursos[r] = (recursos[r] || 0) + 1;
+      });
+    });
+
+    res.json({
+      total_cuestionarios: qs.length,
+      impactos,
+      recursos,
+      cuestionarios_recientes: qs.slice(0, 10),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ── API: Export ────────────────────────────────────── */
+app.post('/api/export/json', requireAuth, async (req, res) => {
+  try {
+    const qs = await db.getSubmittedQuestionnaires();
+    res.json({ cuestionarios: qs, count: qs.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/export/excel', requireAuth, async (req, res) => {
+  try {
+    const xlsx = require('xlsx');
+    const qs = await db.getSubmittedQuestionnaires();
+
+    const data = qs.map(q => {
+      const resp = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
+      return {
+        Empresa: resp.nombre_equipo || '',
+        Iniciativa: resp.nombre_iniciativa || '',
+        Líder: resp.lider_equipo || '',
+        Fecha: resp.fecha || '',
+        Reto: resp.reto?.problema || '',
+        Solución: resp.solucion?.propuesta || '',
+        Recursos: (resp.recursos?.tipos || []).join(', '),
+      };
+    });
+
+    const wb = xlsx.utils.book_new();
+    const ws = xlsx.utils.json_to_sheet(data);
+    xlsx.utils.book_append_sheet(wb, ws, 'Respuestas');
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="cuestionarios.xlsx"');
+    res.send(xlsx.write(wb, { type: 'buffer' }));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ── Health Check ──────────────────────────────────── */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
