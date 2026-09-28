@@ -5,12 +5,16 @@ let currentCompanyId = null;
 // ── Modal Management ────────────────────────────────
 const companyModal = document.getElementById('companyModal');
 const teamModal = document.getElementById('teamModal');
+const createTeamFormModal = document.getElementById('createTeamFormModal');
+const accessLinkModal = document.getElementById('accessLinkModal');
 const companyForm = document.getElementById('companyForm');
+const teamForm = document.getElementById('teamForm');
 
 function openCompanyModal(editId = null) {
   currentCompanyId = editId;
   const titleEl = document.querySelector('#companyModal .modal-header h3');
   const nameInput = document.getElementById('companyName');
+  const sectorInput = document.getElementById('companySector');
 
   if (editId) {
     titleEl.textContent = 'Editar Empresa';
@@ -19,11 +23,13 @@ function openCompanyModal(editId = null) {
       .then(r => r.json())
       .then(company => {
         nameInput.value = company.name;
+        sectorInput.value = company.sector || '';
         companyModal.classList.remove('hidden');
       });
   } else {
     titleEl.textContent = 'Nueva Empresa';
     nameInput.value = '';
+    sectorInput.value = '';
     companyModal.classList.remove('hidden');
   }
 }
@@ -45,12 +51,42 @@ function closeTeamModal() {
   teamModal.classList.add('hidden');
 }
 
+function openCreateTeamForm() {
+  createTeamFormModal.classList.remove('hidden');
+  document.getElementById('teamName').focus();
+}
+
+function closeCreateTeamForm() {
+  createTeamFormModal.classList.add('hidden');
+  teamForm.reset();
+}
+
+function showAccessLink(companyId, companyName) {
+  const accessLink = `${window.location.origin}/empresa/${companyId}/crear-equipos`;
+
+  document.getElementById('accessLink').value = accessLink;
+
+  // Generar QR usando QR Server API
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(accessLink)}`;
+  document.getElementById('qrCode').innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: 300px; height: 300px;">`;
+
+  // Guardar en window para funciones globales
+  window.currentAccessLink = accessLink;
+
+  accessLinkModal.classList.remove('hidden');
+}
+
+function closeAccessLink() {
+  accessLinkModal.classList.add('hidden');
+}
+
 // ── Event Listeners ────────────────────────────────
 document.getElementById('createCompanyBtn').addEventListener('click', () => openCompanyModal());
 
 companyForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('companyName').value.trim();
+  const sector = document.getElementById('companySector').value;
 
   if (!name) {
     alert('El nombre de la empresa es requerido');
@@ -66,13 +102,21 @@ companyForm.addEventListener('submit', async (e) => {
     const response = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, sector }),
     });
 
     if (!response.ok) throw new Error('Error al guardar');
 
+    const company = await response.json();
     closeCompanyModal();
     loadCompanies();
+
+    // Mostrar link con QR si es nueva empresa
+    if (!currentCompanyId) {
+      setTimeout(() => {
+        showAccessLink(company.id, name);
+      }, 500);
+    }
   } catch (error) {
     console.error('Error:', error);
     alert('Error al guardar la empresa: ' + error.message);
@@ -87,11 +131,51 @@ document.querySelectorAll('[data-action="close-team"]').forEach(btn => {
   btn.addEventListener('click', closeTeamModal);
 });
 
-document.getElementById('createTeamBtn').addEventListener('click', () => {
-  const teamName = prompt('Nombre del equipo:');
-  if (!teamName?.trim()) return;
+document.querySelectorAll('[data-action="close-create-team"]').forEach(btn => {
+  btn.addEventListener('click', closeCreateTeamForm);
+});
 
-  createTeam(currentCompanyId, teamName.trim());
+document.querySelectorAll('[data-action="close-access-link"]').forEach(btn => {
+  btn.addEventListener('click', closeAccessLink);
+});
+
+// Funciones globales para el modal de acceso
+function copyAccessLink() {
+  const link = document.getElementById('accessLink').value;
+  navigator.clipboard.writeText(link);
+  alert('✅ Link copiado al portapapeles');
+}
+
+function downloadQR() {
+  const link = window.currentAccessLink;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
+
+  const a = document.createElement('a');
+  a.href = qrUrl;
+  a.download = 'qr-acceso-equipos.png';
+  a.click();
+}
+
+document.getElementById('createTeamBtn').addEventListener('click', openCreateTeamForm);
+
+document.getElementById('createTeamLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  const companyName = document.getElementById('companyNameInTeamModal').textContent;
+  showAccessLink(currentCompanyId, companyName);
+});
+
+teamForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('teamName').value.trim();
+  const color = document.getElementById('teamColor').value;
+
+  if (!name) {
+    alert('El nombre del equipo es requerido');
+    return;
+  }
+
+  await createTeam(currentCompanyId, name, color);
+  closeCreateTeamForm();
 });
 
 // ── Companies ────────────────────────────────────
@@ -121,7 +205,7 @@ function renderCompanies(companies) {
     <div class="company-card">
       <h3>${escapeHtml(company.name)}</h3>
       <p class="text-muted" style="font-size: 12px;">
-        Creada: ${new Date(company.created_at).toLocaleDateString('es-ES')}
+        ${company.sector || 'Sin sector'} • ${new Date(company.created_at).toLocaleDateString('es-ES')}
       </p>
       <div class="company-card-footer">
         <button class="btn btn-primary btn-small" onclick="openTeamModal('${company.id}', '${escapeHtml(company.name)}')">
@@ -200,23 +284,27 @@ function renderTeams(teams, companyId) {
   `).join('');
 }
 
-async function createTeam(companyId, teamName) {
+async function createTeam(companyId, teamName, avatarColor) {
   try {
     const response = await fetch(`/api/companies/${companyId}/teams`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: teamName,
-        avatarColor: generateRandomColor(),
+        avatarColor: avatarColor || generateRandomColor(),
       }),
     });
 
-    if (!response.ok) throw new Error('Error al crear');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Error al crear');
+    }
 
     loadTeams(companyId);
+    alert('✅ Equipo creado exitosamente');
   } catch (error) {
     console.error('Error:', error);
-    alert('Error al crear equipo');
+    alert('Error al crear equipo: ' + error.message);
   }
 }
 
@@ -269,7 +357,7 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ── Init ────────────────────────────────────
+// ── Init ────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadCompanies();
 });

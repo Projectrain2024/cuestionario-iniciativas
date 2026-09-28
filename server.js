@@ -55,6 +55,9 @@ app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login'
 app.get('/empresa/:companyId/questionnaire/:qId', (_, res) =>
   res.sendFile(path.join(__dirname, 'public', 'questionnaire.html')));
 
+app.get('/empresa/:companyId/crear-equipos', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'create-team-public.html')));
+
 app.get('/dashboard', requireAuth, (_, res) =>
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 
@@ -69,11 +72,21 @@ app.get('/api/companies', requireAuth, async (req, res) => {
 });
 
 app.post('/api/companies', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, sector } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'name requerido' });
   try {
-    const company = await db.createCompany(nanoid(12), name.trim());
+    const company = await db.createCompany(nanoid(12), name.trim(), sector || null);
     res.status(201).json(company);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/companies/:id/public', async (req, res) => {
+  try {
+    const company = await db.getCompany(req.params.id);
+    if (!company) return res.status(404).json({ error: 'not found' });
+    res.json(company);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -90,10 +103,10 @@ app.get('/api/companies/:id', requireAuth, async (req, res) => {
 });
 
 app.put('/api/companies/:id', requireAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, sector } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'name requerido' });
   try {
-    const company = await db.updateCompany(req.params.id, { name: name.trim() });
+    const company = await db.updateCompany(req.params.id, { name: name.trim(), sector: sector || null });
     if (!company) return res.status(404).json({ error: 'not found' });
     res.json(company);
   } catch (e) {

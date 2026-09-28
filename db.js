@@ -1,172 +1,311 @@
-const { Pool } = require('pg');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/cuestionario',
+const db = new sqlite3.Database(path.join(__dirname, 'cuestionario.db'), (err) => {
+  if (err) {
+    console.error('Error opening database:', err.message);
+  } else {
+    console.log('✅ Connected to SQLite');
+    initDb();
+  }
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-});
+db.configure('busyTimeout', 5000);
+
+function initDb() {
+  // Enable foreign keys
+  db.run('PRAGMA foreign_keys = ON');
+
+  // Create tables if they don't exist
+  db.run(`
+    CREATE TABLE IF NOT EXISTS companies (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      sector TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      deleted_at DATETIME
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS teams (
+      id TEXT PRIMARY KEY,
+      company_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      avatar_color TEXT DEFAULT '#3B82F6',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      deleted_at DATETIME,
+      FOREIGN KEY (company_id) REFERENCES companies(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS questionnaires (
+      id TEXT PRIMARY KEY,
+      team_id TEXT NOT NULL,
+      company_id TEXT NOT NULL,
+      access_token TEXT NOT NULL UNIQUE,
+      status TEXT DEFAULT 'draft',
+      responses TEXT DEFAULT '{}',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      submitted_at DATETIME,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (team_id) REFERENCES teams(id),
+      FOREIGN KEY (company_id) REFERENCES companies(id)
+    )
+  `);
+}
 
 module.exports = {
-  query: async (text, params) => {
-    const start = Date.now();
-    try {
-      const res = await pool.query(text, params);
-      const duration = Date.now() - start;
-      console.log('Executed query', { text, duration, rows: res.rowCount });
-      return res;
-    } catch (error) {
-      console.error('Database query error', { text, error: error.message });
-      throw error;
-    }
-  },
-
-  getConnection: async () => {
-    return pool.connect();
+  query: async (text, params = []) => {
+    return new Promise((resolve, reject) => {
+      if (text.includes('INSERT') || text.includes('UPDATE') || text.includes('DELETE')) {
+        db.run(text, params, function(err) {
+          if (err) reject(err);
+          else resolve({ rows: [{ id: this.lastID }] });
+        });
+      } else {
+        db.all(text, params, (err, rows) => {
+          if (err) reject(err);
+          else resolve({ rows: rows || [] });
+        });
+      }
+    });
   },
 
   // Companies
-  createCompany: async (id, name) => {
-    const res = await module.exports.query(
-      'INSERT INTO companies (id, name) VALUES ($1, $2) RETURNING *',
-      [id, name]
-    );
-    return res.rows[0];
+  createCompany: async (id, name, sector = null) => {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO companies (id, name, sector) VALUES (?, ?, ?)',
+        [id, name, sector],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, name, sector, created_at: new Date() });
+        }
+      );
+    });
   },
 
   getCompanies: async () => {
-    const res = await module.exports.query(
-      'SELECT * FROM companies WHERE deleted_at IS NULL ORDER BY created_at DESC'
-    );
-    return res.rows;
+    return new Promise((resolve, reject) => {
+      db.all(
+        'SELECT * FROM companies WHERE deleted_at IS NULL ORDER BY created_at DESC',
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
   },
 
   getCompany: async (id) => {
-    const res = await module.exports.query(
-      'SELECT * FROM companies WHERE id = $1 AND deleted_at IS NULL',
-      [id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM companies WHERE id = ? AND deleted_at IS NULL',
+        [id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
   },
 
   updateCompany: async (id, data) => {
-    const { name } = data;
-    const res = await module.exports.query(
-      'UPDATE companies SET name = $1, updated_at = NOW() WHERE id = $2 AND deleted_at IS NULL RETURNING *',
-      [name, id]
-    );
-    return res.rows[0];
+    const { name, sector } = data;
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE companies SET name = ?, sector = ?, updated_at = datetime(\'now\') WHERE id = ? AND deleted_at IS NULL',
+        [name, sector, id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, name, sector });
+        }
+      );
+    });
   },
 
   deleteCompany: async (id) => {
-    const res = await module.exports.query(
-      'UPDATE companies SET deleted_at = NOW() WHERE id = $1 RETURNING *',
-      [id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE companies SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id });
+        }
+      );
+    });
   },
 
   // Teams
   createTeam: async (id, companyId, name, avatarColor) => {
-    const res = await module.exports.query(
-      'INSERT INTO teams (id, company_id, name, avatar_color) VALUES ($1, $2, $3, $4) RETURNING *',
-      [id, companyId, name, avatarColor]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO teams (id, company_id, name, avatar_color) VALUES (?, ?, ?, ?)',
+        [id, companyId, name, avatarColor],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, company_id: companyId, name, avatar_color: avatarColor });
+        }
+      );
+    });
   },
 
   getTeamsByCompany: async (companyId) => {
-    const res = await module.exports.query(
-      'SELECT * FROM teams WHERE company_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC',
-      [companyId]
-    );
-    return res.rows;
+    return new Promise((resolve, reject) => {
+      db.all(
+        'SELECT * FROM teams WHERE company_id = ? AND deleted_at IS NULL ORDER BY created_at DESC',
+        [companyId],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
   },
 
   getTeam: async (id) => {
-    const res = await module.exports.query(
-      'SELECT * FROM teams WHERE id = $1 AND deleted_at IS NULL',
-      [id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM teams WHERE id = ? AND deleted_at IS NULL',
+        [id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
   },
 
   updateTeam: async (id, data) => {
     const { name, avatarColor } = data;
-    const res = await module.exports.query(
-      'UPDATE teams SET name = $1, avatar_color = $2, updated_at = NOW() WHERE id = $3 AND deleted_at IS NULL RETURNING *',
-      [name, avatarColor, id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE teams SET name = ?, avatar_color = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL',
+        [name, avatarColor, id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, name });
+        }
+      );
+    });
   },
 
   deleteTeam: async (id) => {
-    const res = await module.exports.query(
-      'UPDATE teams SET deleted_at = NOW() WHERE id = $1 RETURNING *',
-      [id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE teams SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id });
+        }
+      );
+    });
   },
 
   // Questionnaires
   createQuestionnaire: async (id, teamId, companyId, accessToken) => {
-    const res = await module.exports.query(
-      'INSERT INTO questionnaires (id, team_id, company_id, access_token, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [id, teamId, companyId, accessToken, 'draft']
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO questionnaires (id, team_id, company_id, access_token, status) VALUES (?, ?, ?, ?, ?)',
+        [id, teamId, companyId, accessToken, 'draft'],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, team_id: teamId, company_id: companyId, access_token: accessToken, status: 'draft' });
+        }
+      );
+    });
   },
 
   getQuestionnaire: async (id) => {
-    const res = await module.exports.query(
-      'SELECT * FROM questionnaires WHERE id = $1',
-      [id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM questionnaires WHERE id = ?',
+        [id],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
   },
 
   getQuestionnaireByToken: async (token) => {
-    const res = await module.exports.query(
-      'SELECT * FROM questionnaires WHERE access_token = $1',
-      [token]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM questionnaires WHERE access_token = ?',
+        [token],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
   },
 
   updateQuestionnaireResponses: async (id, responses) => {
-    const res = await module.exports.query(
-      'UPDATE questionnaires SET responses = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [JSON.stringify(responses), id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE questionnaires SET responses = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [JSON.stringify(responses), id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, updated_at: new Date() });
+        }
+      );
+    });
   },
 
   submitQuestionnaire: async (id) => {
-    const res = await module.exports.query(
-      'UPDATE questionnaires SET status = $1, submitted_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING *',
-      ['submitted', id]
-    );
-    return res.rows[0];
+    return new Promise((resolve, reject) => {
+      db.run(
+        'UPDATE questionnaires SET status = ?, submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        ['submitted', id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id, status: 'submitted' });
+        }
+      );
+    });
   },
 
   getQuestionnairesByCompany: async (companyId) => {
-    const res = await module.exports.query(
-      'SELECT * FROM questionnaires WHERE company_id = $1 ORDER BY created_at DESC',
-      [companyId]
-    );
-    return res.rows;
+    return new Promise((resolve, reject) => {
+      db.all(
+        'SELECT * FROM questionnaires WHERE company_id = ? ORDER BY created_at DESC',
+        [companyId],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
   },
 
   getSubmittedQuestionnaires: async () => {
-    const res = await module.exports.query(
-      'SELECT * FROM questionnaires WHERE status = $1 ORDER BY submitted_at DESC',
-      ['submitted']
-    );
-    return res.rows;
+    return new Promise((resolve, reject) => {
+      db.all(
+        'SELECT * FROM questionnaires WHERE status = ? ORDER BY submitted_at DESC',
+        ['submitted'],
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
+      );
+    });
   },
 
   end: async () => {
-    await pool.end();
+    return new Promise((resolve, reject) => {
+      db.close((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
   },
 };

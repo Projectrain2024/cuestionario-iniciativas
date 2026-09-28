@@ -3,15 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Cuestionario de Iniciativas</title>
+  <title>Plataforma de Eventos Facilitados — Presencia Ejecutiva</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .app-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: #7B3FA8;
+      letter-spacing: -0.5px;
+    }
+  </style>
 </head>
 <body>
   <div class="app-container">
     <!-- Header -->
     <header class="app-header">
       <div class="header-content">
-        <h1>🎯 Cuestionario de Iniciativas</h1>
+        <h1>Plataforma de Eventos Facilitados</h1>
         <div class="header-actions">
           <a href="/dashboard" class="btn btn-secondary">📊 Dashboard</a>
           <a href="/logout" class="btn btn-danger">Salir</a>
@@ -47,6 +55,27 @@
           <label for="companyName">Nombre de la Empresa</label>
           <input type="text" id="companyName" name="name" required>
         </div>
+        <div class="form-group">
+          <label for="companySector">Sector *</label>
+          <select id="companySector" name="sector">
+            <option value="">Seleccionar sector</option>
+            <option value="Agroindustrial | Químico">Agroindustrial | Químico</option>
+            <option value="Construcción e Infraestructura">Construcción e Infraestructura</option>
+            <option value="Consumo Masivo">Consumo Masivo</option>
+            <option value="Editorial | Medios">Editorial | Medios</option>
+            <option value="Educación">Educación</option>
+            <option value="Energético (hidrocarburos y minería)">Energético (hidrocarburos y minería)</option>
+            <option value="Farmacéutico | Salud | Dispositivos Medicos">Farmacéutico | Salud | Dispositivos Medicos</option>
+            <option value="Financiero | Asegurador">Financiero | Asegurador</option>
+            <option value="Industrial">Industrial</option>
+            <option value="Logística | Transporte Aéreo y Terrestre">Logística | Transporte Aéreo y Terrestre</option>
+            <option value="Servicios">Servicios</option>
+            <option value="TICS (Tecnología de la Información y las Telecomunicaciones)">TICS (Tecnología de la Información y las Telecomunicaciones)</option>
+            <option value="Público | Gobierno">Público | Gobierno</option>
+            <option value="Automotriz">Automotriz</option>
+            <option value="Retail">Retail</option>
+          </select>
+        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Guardar</button>
           <button type="button" class="btn btn-secondary" data-action="close">Cancelar</button>
@@ -55,7 +84,7 @@
     </div>
   </div>
 
-  <!-- Modal: Gestionar Equipo -->
+  <!-- Modal: Gestionar Equipos -->
   <div id="teamModal" class="modal hidden">
     <div class="modal-content modal-large">
       <div class="modal-header">
@@ -63,11 +92,76 @@
         <button class="modal-close" data-action="close-team">×</button>
       </div>
       <div class="modal-body">
-        <button id="createTeamBtn" class="btn btn-primary">+ Nuevo Equipo</button>
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <button id="createTeamBtn" class="btn btn-primary">+ Nuevo Equipo</button>
+          <a href="#" id="createTeamLink" class="btn btn-secondary" onclick="return false;">🔗 Link para crear equipo</a>
+        </div>
         <div id="teamsList" class="teams-list">
           <!-- Cargado dinámicamente -->
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Link de Acceso con QR -->
+  <div id="accessLinkModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔗 Link de Acceso — Crear Equipos</h3>
+        <button class="modal-close" data-action="close-access-link">×</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <p style="color: #6b7280; margin-bottom: 20px;">Comparte este link o escanea el QR para que los asistentes creen sus equipos</p>
+
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <div id="qrCode" style="display: inline-block; background: white; padding: 10px; border-radius: 6px;">
+            <!-- QR será generado aquí -->
+          </div>
+        </div>
+
+        <div style="background: #f0f4ff; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+          <input type="text" id="accessLink" readonly style="width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 12px; font-family: monospace;">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary" onclick="copyAccessLink()">📋 Copiar Link</button>
+          <button class="btn btn-secondary" onclick="downloadQR()">📥 Descargar QR</button>
+          <button class="btn btn-secondary" data-action="close-access-link">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear Equipo -->
+  <div id="createTeamFormModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Nuevo Equipo</h3>
+        <button class="modal-close" data-action="close-create-team">×</button>
+      </div>
+      <form id="teamForm" class="form">
+        <div class="form-group">
+          <label for="teamName">Nombre del Equipo *</label>
+          <input type="text" id="teamName" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="teamColor">Color del Avatar</label>
+          <select id="teamColor">
+            <option value="#667eea">Azul</option>
+            <option value="#764ba2">Púrpura</option>
+            <option value="#f093fb">Rosa</option>
+            <option value="#4facfe">Celeste</option>
+            <option value="#00f2fe">Cyan</option>
+            <option value="#43e97b">Verde</option>
+            <option value="#fa709a">Coral</option>
+            <option value="#fee140">Amarillo</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Crear Equipo</button>
+          <button type="button" class="btn btn-secondary" data-action="close-create-team">Cancelar</button>
+        </div>
+      </form>
     </div>
   </div>
 
