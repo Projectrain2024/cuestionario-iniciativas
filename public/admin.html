@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Cuestionario de Iniciativas</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <h1>🎯 Cuestionario de Iniciativas</h1>
+        <div class="header-actions">
+          <a href="/dashboard" class="btn btn-secondary">📊 Dashboard</a>
+          <a href="/logout" class="btn btn-danger">Salir</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <!-- Companies Section -->
+      <section class="companies-section">
+        <div class="section-header">
+          <h2>Empresas</h2>
+          <button id="createCompanyBtn" class="btn btn-primary">+ Nueva Empresa</button>
+        </div>
+
+        <div id="companiesList" class="companies-grid">
+          <!-- Cargado dinámicamente -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Nueva Empresa -->
+  <div id="companyModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nueva Empresa</h3>
+        <button class="modal-close" data-action="close">×</button>
+      </div>
+      <form id="companyForm" class="form">
+        <div class="form-group">
+          <label for="companyName">Nombre de la Empresa</label>
+          <input type="text" id="companyName" name="name" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" class="btn btn-secondary" data-action="close">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Gestionar Equipo -->
+  <div id="teamModal" class="modal hidden">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>Equipos de <span id="companyNameInTeamModal"></span></h3>
+        <button class="modal-close" data-action="close-team">×</button>
+      </div>
+      <div class="modal-body">
+        <button id="createTeamBtn" class="btn btn-primary">+ Nuevo Equipo</button>
+        <div id="teamsList" class="teams-list">
+          <!-- Cargado dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

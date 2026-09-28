@@ -110,6 +110,65 @@ app.delete('/api/companies/:id', requireAuth, async (req, res) => {
   }
 });
 
+/* ── API: Teams ────────────────────────────────────── */
+app.post('/api/companies/:companyId/teams', requireAuth, async (req, res) => {
+  const { name, avatarColor } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'name requerido' });
+  try {
+    const team = await db.createTeam(nanoid(12), req.params.companyId, name.trim(), avatarColor || '#667eea');
+    res.status(201).json(team);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/companies/:companyId/teams', requireAuth, async (req, res) => {
+  try {
+    const teams = await db.getTeamsByCompany(req.params.companyId);
+    res.json(teams);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/teams/:id', requireAuth, async (req, res) => {
+  try {
+    const team = await db.updateTeam(req.params.id, req.body);
+    if (!team) return res.status(404).json({ error: 'not found' });
+    res.json(team);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/teams/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteTeam(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/teams/:id/generate-link', requireAuth, async (req, res) => {
+  try {
+    const team = await db.getTeam(req.params.id);
+    if (!team) return res.status(404).json({ error: 'team not found' });
+
+    const crypto = require('crypto');
+    const accessToken = crypto.randomUUID();
+    const q = await db.createQuestionnaire(nanoid(12), team.id, team.company_id, accessToken);
+
+    res.status(201).json({
+      id: q.id,
+      company_id: q.company_id,
+      access_token: q.access_token,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ── Health Check ──────────────────────────────────── */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
