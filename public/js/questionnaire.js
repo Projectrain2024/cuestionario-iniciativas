@@ -19,19 +19,38 @@ function getUrlParams() {
 async function init() {
   const { companyId, questionnaireId: qId } = getUrlParams();
   questionnaireId = qId;
-  accessToken = qId; // For PATCH requests
 
   // Load questionnaire data
   try {
-    const res = await fetch(`/api/questionnaires/${qId}?token=${accessToken}`);
+    const res = await fetch(`/api/questionnaires/${qId}`);
     if (!res.ok) throw new Error('Not found');
 
     const q = await res.json();
 
-    // Set team name
-    if (q.responses?.nombre_equipo) {
+    // Set team name from DB
+    if (q.team_name) {
+      document.getElementById('teamName').textContent = q.team_name;
+      document.getElementById('teamNameInput').value = q.team_name;
+    } else if (q.responses?.nombre_equipo) {
       document.getElementById('teamName').textContent = q.responses.nombre_equipo;
       document.getElementById('teamNameInput').value = q.responses.nombre_equipo;
+    }
+
+    // Show company logo if available
+    if (q.company_logo) {
+      const logoEl = document.getElementById('companyLogo');
+      if (logoEl) {
+        logoEl.src = q.company_logo;
+        logoEl.style.display = 'inline-block';
+      }
+    }
+
+    // If already submitted, show results directly
+    if (q.status === 'submitted') {
+      const resp = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
+      if (q.team_name) resp.nombre_equipo = q.team_name;
+      showResults(resp);
+      return;
     }
 
     // Load existing responses
@@ -84,10 +103,7 @@ async function autoSave() {
   try {
     const res = await fetch(`/api/questionnaires/${questionnaireId}/responses`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state),
     });
 
@@ -299,24 +315,136 @@ document.getElementById('questionnaireForm').addEventListener('submit', async (e
   }
 
   try {
+    // Save final responses first
+    const state = collectFormData();
+    await fetch(`/api/questionnaires/${questionnaireId}/responses`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+
     const res = await fetch(`/api/questionnaires/${questionnaireId}/submit`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ submitted: true }),
     });
 
     if (!res.ok) throw new Error('Submit failed');
 
-    alert('✅ ¡Cuestionario enviado correctamente!');
-    window.location.href = '/';
+    showResults(state);
   } catch (error) {
     console.error('Submit error:', error);
     alert('Error al enviar el cuestionario');
   }
 });
+
+// Results View
+function showResults(r) {
+  const esc = (t) => { const d = document.createElement('div'); d.textContent = t || ''; return d.innerHTML; };
+
+  const section = (icon, title, content) => content.trim() ? `
+    <div style="margin-bottom:28px;">
+      <h3 style="color:#7B3FA8; margin-bottom:10px; font-size:17px; font-weight:700;">${icon} ${title}</h3>
+      <div style="background:#faf8fc; padding:20px 24px; border-radius:10px; border-left:4px solid #7B3FA8; line-height:1.7;">${content}</div>
+    </div>` : '';
+
+  const field = (label, value) => value ? `<div style="margin-bottom:12px;"><strong style="color:#374151; display:block; margin-bottom:3px; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">${label}</strong><span style="color:#1f2937; font-size:15px;">${esc(value)}</span></div>` : '';
+
+  const chips = (items) => (items || []).map(i => `<span style="display:inline-block; background:#E9A020; color:white; padding:5px 14px; border-radius:16px; font-size:13px; font-weight:500; margin:3px 6px 3px 0;">${esc(i)}</span>`).join('');
+
+  const impactoRows = (r.impacto || []).filter(i => i.resultado).map(i => `
+    <tr style="border-bottom:1px solid #e5e7eb;">
+      <td style="padding:10px;">${esc(i.resultado)}</td>
+      <td style="padding:10px;">${esc(i.indicador)}</td>
+      <td style="padding:10px;">${esc(i.meta)}</td>
+    </tr>`).join('');
+
+  const riesgoRows = (r.riesgos || []).filter(i => i.riesgo).map(i => `
+    <tr style="border-bottom:1px solid #e5e7eb;">
+      <td style="padding:10px;">${esc(i.riesgo)}</td>
+      <td style="padding:10px;">${esc(i.mitigacion)}</td>
+    </tr>`).join('');
+
+  document.querySelector('.questionnaire-form').innerHTML = `
+    <div style="max-width:760px; margin:0 auto; padding:40px 24px;">
+      <div style="text-align:center; margin-bottom:40px;">
+        <div style="font-size:56px; margin-bottom:16px;">✅</div>
+        <h2 style="color:#3A1259; font-size:28px; font-weight:700; margin-bottom:8px;">¡Cuestionario Enviado!</h2>
+        <p style="color:#6b7280; font-size:16px;">Resumen de las respuestas del equipo</p>
+      </div>
+
+      <div style="background:white; border-radius:16px; padding:32px 36px; box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <div style="margin-bottom:28px; padding-bottom:20px; border-bottom:2px solid #f3f4f6;">
+          <h2 style="color:#3A1259; font-size:24px; font-weight:700; margin-bottom:6px;">${esc(r.nombre_equipo)}</h2>
+          <p style="color:#6b7280; font-size:15px;">${esc(r.nombre_iniciativa)} &nbsp;·&nbsp; ${esc(r.lider_equipo)} &nbsp;·&nbsp; ${r.fecha || ''}</p>
+        </div>
+
+        ${section('🎯', 'Reto de Negocio',
+          field('Problema / Oportunidad', r.reto?.problema) +
+          field('Evidencias', r.reto?.evidencias) +
+          (r.reto?.impactos?.length ? `<div style="margin-bottom:12px;"><strong style="color:#374151; display:block; margin-bottom:6px; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Impactos</strong>${chips(r.reto.impactos)}</div>` : '') +
+          field('Descripción', r.reto?.descripcion)
+        )}
+
+        ${section('💡', 'Solución',
+          field('Propuesta', r.solucion?.propuesta) +
+          field('Diferenciadores', r.solucion?.diferenciadores)
+        )}
+
+        ${impactoRows ? section('📊', 'Impacto Esperado', `
+          <table style="width:100%; font-size:13px; border-collapse:collapse;">
+            <thead><tr style="background:#f3f4f6;">
+              <th style="padding:10px; text-align:left;">Resultado</th>
+              <th style="padding:10px; text-align:left;">Indicador</th>
+              <th style="padding:10px; text-align:left;">Meta</th>
+            </tr></thead>
+            <tbody>${impactoRows}</tbody>
+          </table>`) : ''}
+
+        ${section('🛠️', 'Recursos',
+          (r.recursos?.tipos?.length ? `<div style="margin-bottom:12px;">${chips(r.recursos.tipos)}</div>` : '') +
+          field('Detalle', r.recursos?.detalle)
+        )}
+
+        ${riesgoRows ? section('⚠️', 'Riesgos', `
+          <table style="width:100%; font-size:13px; border-collapse:collapse;">
+            <thead><tr style="background:#f3f4f6;">
+              <th style="padding:10px; text-align:left;">Riesgo</th>
+              <th style="padding:10px; text-align:left;">Mitigación</th>
+            </tr></thead>
+            <tbody>${riesgoRows}</tbody>
+          </table>`) : ''}
+
+        ${r.necesidades ? section('📌', 'Necesidades Adicionales', field('', r.necesidades)) : ''}
+      </div>
+
+      <div style="text-align:center; margin-top:32px;">
+        <button onclick="downloadPDF()" style="background:#7B3FA8; color:white; border:none; padding:14px 36px; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(123,63,168,0.3); transition:all 0.2s;" onmouseover="this.style.background='#3A1259'" onmouseout="this.style.background='#7B3FA8'">
+          📄 Descargar PDF
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Hide navigation and instructions
+  const nav = document.querySelector('.form-navigation');
+  if (nav) nav.style.display = 'none';
+  const instructions = document.querySelector('.questionnaire-instructions');
+  if (instructions) instructions.style.display = 'none';
+  const progress = document.getElementById('progressFill');
+  if (progress) progress.style.width = '100%';
+  window.scrollTo(0, 0);
+}
+
+// PDF Download
+function downloadPDF() {
+  const link = document.createElement('a');
+  link.href = `/api/questionnaires/${questionnaireId}/pdf`;
+  link.download = '';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 // Utilities
 function debounce(func, wait) {

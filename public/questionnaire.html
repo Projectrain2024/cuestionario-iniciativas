@@ -16,26 +16,34 @@
 
     <!-- Header -->
     <header class="questionnaire-header">
-      <h1>📋 Cuestionario de Iniciativas Estratégicas</h1>
+      <div class="header-left">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="/img/lhh-logo.webp" alt="LHH" style="height: 48px;">
+          <h1>📋 Cuestionario de Iniciativas Estratégicas</h1>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="teamName" class="team-name-header"></span>
+          <span id="saveStatus" class="save-status">Guardando...</span>
+        </div>
+      </div>
       <div class="header-right">
-        <span id="saveStatus" class="save-status">Guardando...</span>
-        <span id="teamName" class="team-name"></span>
+        <img id="companyLogo" src="" alt="" style="display:none; height:64px; object-fit:contain;">
       </div>
     </header>
+
+    <!-- Instructions -->
+    <div class="questionnaire-instructions">
+      <p>Este cuestionario será la base de trabajo para orientar la conversación durante las sesiones.</p>
+      <p>La idea es estructurar las iniciativas del equipo a partir de cuatro preguntas clave: <em>¿qué reto queremos abordar?, ¿qué proponemos?, ¿qué impacto esperamos generar y qué necesitamos para hacerlo realidad?</em></p>
+      <p>No buscamos tener todas las respuestas desde el inicio, sino construirlas juntos a partir de la conversación y la experiencia del equipo.</p>
+    </div>
 
     <!-- Form Container -->
     <main class="questionnaire-form">
       <form id="questionnaireForm">
         <!-- Info Básica -->
         <section class="form-section visible" data-section="0">
-          <div class="section-header">
-            <h2>📝 Información Básica</h2>
-          </div>
-
-          <div class="form-group">
-            <label>Nombre del Equipo</label>
-            <input type="text" id="teamNameInput" readonly class="readonly-input">
-          </div>
+          <input type="hidden" id="teamNameInput">
 
           <div class="form-group">
             <label>Nombre de la Iniciativa/Propuesta *</label>

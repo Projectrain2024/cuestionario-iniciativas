@@ -123,13 +123,26 @@
 <body>
   <div class="public-container">
     <div class="public-header">
+      <img src="/img/lhh-logo.webp" alt="LHH" style="height: 80px; margin-bottom: 16px;">
       <h1>👥 Crear Equipo</h1>
       <p>Ingresa los datos de tu equipo para comenzar</p>
     </div>
 
     <div class="company-info">
-      <h2 id="companyName">Empresa</h2>
-      <p id="companySector" style="margin-top: 4px;"></p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img id="companyLogo" src="" alt="" style="display:none; height:100px; object-fit:contain;">
+        <div>
+          <h2 id="companyName">Empresa</h2>
+          <p id="companySector" style="margin-top: 4px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-card" style="background:white; padding:20px 28px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); margin-bottom:20px; border-left:4px solid #E9A020; line-height:1.7; font-size:15px; color:#1C0D36;">
+      <p style="font-weight:700; font-size:17px; margin-bottom:8px;">¡Bienvenidos!</p>
+      <p style="margin-bottom:8px;">Desde <strong>LHH</strong> los acompañamos en este espacio para conversar, compartir ideas y construir juntos.</p>
+      <p style="margin-bottom:8px;">Usaremos este cuestionario como guía para llevar las ideas del equipo a una iniciativa concreta y con impacto para el negocio.</p>
+      <p style="margin-bottom:0;">Para comenzar, completen los datos del equipo.</p>
     </div>
 
     <div class="form-card">
@@ -187,6 +200,11 @@
         const company = await res.json();
         document.getElementById('companyName').textContent = company.name;
         document.getElementById('companySector').textContent = company.sector || 'Sector no especificado';
+        if (company.logo_url) {
+          const logoEl = document.getElementById('companyLogo');
+          logoEl.src = company.logo_url;
+          logoEl.style.display = 'block';
+        }
       } catch (error) {
         document.body.innerHTML = `<div class="public-container" style="text-align: center; color: #ef4444;">
           ❌ Empresa no encontrada. Por favor verifica el link.
@@ -204,12 +222,31 @@
 
         const teams = await res.json();
         renderTeams(teams);
+        updateAvailableColors(teams);
       } catch (error) {
         console.error('Error:', error);
       }
     }
 
-    function renderTeams(teams) {
+    function updateAvailableColors(teams) {
+      const colorSelect = document.getElementById('teamColor');
+      const options = colorSelect.querySelectorAll('option');
+      const usedColors = teams.map(t => t.avatar_color);
+
+      options.forEach(opt => {
+        opt.disabled = false;
+        opt.textContent = opt.textContent.replace(' (usado)', '');
+        if (usedColors.includes(opt.value)) {
+          opt.disabled = true;
+          opt.textContent += ' (usado)';
+        }
+      });
+
+      const firstAvailable = Array.from(options).find(o => !o.disabled);
+      if (firstAvailable) colorSelect.value = firstAvailable.value;
+    }
+
+    async function renderTeams(teams) {
       const container = document.getElementById('teamsList');
 
       if (teams.length === 0) {
@@ -217,12 +254,31 @@
         return;
       }
 
-      container.innerHTML = teams.map(team => `
-        <div class="team-list-item">
+      // Fetch questionnaire links for each team
+      const teamsWithLinks = await Promise.all(teams.map(async (team) => {
+        try {
+          const res = await fetch(`/api/teams/${team.id}/questionnaire`);
+          if (res.ok) {
+            const q = await res.json();
+            team.questionnaireUrl = `/empresa/${companyId}/questionnaire/${q.id}?token=${q.access_token}`;
+            team.questionnaireStatus = q.status;
+          }
+        } catch (e) {}
+        return team;
+      }));
+
+      container.innerHTML = teamsWithLinks.map(team => `
+        <div class="team-list-item" style="flex-wrap: wrap;">
           <div class="team-avatar" style="background: ${team.avatar_color}">
             ${team.name.charAt(0).toUpperCase()}
           </div>
-          <div class="team-name">${escapeHtml(team.name)}</div>
+          <div class="team-name" style="flex: 1;">${escapeHtml(team.name)}</div>
+          ${team.questionnaireUrl
+            ? `<a href="${team.questionnaireUrl}" class="btn btn-primary" style="font-size: 13px; padding: 6px 14px; text-decoration: none;">
+                ${team.questionnaireStatus === 'submitted' ? '✅ Ver Respuestas' : '📝 Ir al Cuestionario'}
+              </a>`
+            : '<span style="color: #9ca3af; font-size: 13px;">Sin cuestionario</span>'
+          }
         </div>
       `).join('');
     }
@@ -247,16 +303,24 @@
 
         if (!res.ok) throw new Error('Error al crear equipo');
 
-        // Mostrar mensaje de éxito
-        document.getElementById('successMsg').classList.add('show');
-        setTimeout(() => document.getElementById('successMsg').classList.remove('show'), 3000);
+        const team = await res.json();
 
-        // Limpiar formulario y recargar lista
-        document.getElementById('teamForm').reset();
-        loadTeams();
+        // Generar link del cuestionario
+        const linkRes = await fetch(`/api/teams/${team.id}/generate-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!linkRes.ok) throw new Error('Error al generar link');
+
+        const questionnaire = await linkRes.json();
+        const questionnaireUrl = `${window.location.origin}/empresa/${companyId}/questionnaire/${questionnaire.id}?token=${questionnaire.access_token}`;
+
+        // Redirigir al cuestionario directamente
+        window.location.href = questionnaireUrl;
       } catch (error) {
         console.error('Error:', error);
-        alert('Error al crear equipo: ' + error.message);
+        alert('Error: ' + error.message);
       }
     });
 

@@ -1,0 +1,7 @@
+node_modules/
+.env
+cuestionario.db
+public/uploads/logos/*
+!public/uploads/logos/.gitkeep
+*.log
+.DS_Store

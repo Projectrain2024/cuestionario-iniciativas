@@ -10,7 +10,10 @@
   <div class="app-container">
     <header class="app-header">
       <div class="header-content">
-        <h1>📊 Dashboard</h1>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="/img/lhh-logo.webp" alt="LHH" style="height: 48px;">
+          <h1>📊 Dashboard</h1>
+        </div>
         <div class="header-actions">
           <a href="/" class="btn btn-secondary">← Atrás</a>
           <button id="exportJsonBtn" class="btn btn-primary">📥 Descargar JSON</button>
@@ -52,20 +55,45 @@
                 <th style="padding: 12px; text-align: left;">Iniciativa</th>
                 <th style="padding: 12px; text-align: left;">Líder</th>
                 <th style="padding: 12px; text-align: left;">Fecha Envío</th>
+                <th style="padding: 12px; text-align: left;">Acción</th>
               </tr>
             </thead>
             <tbody id="responsesTable"></tbody>
           </table>
         </section>
+
+        <!-- Detail Modal -->
+        <div id="detailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; overflow-y:auto; padding:40px 20px;">
+          <div style="max-width:780px; margin:0 auto; background:white; border-radius:16px; padding:40px 48px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+            <button onclick="document.getElementById('detailModal').style.display='none'" style="position:absolute; top:20px; right:24px; background:#f3f4f6; border:none; font-size:20px; cursor:pointer; color:#6b7280; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;">✕</button>
+            <div id="detailContent"></div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
 
   <script>
+    // Detect if viewing a specific company
+    const pathParts = window.location.pathname.split('/');
+    const companyId = pathParts[1] === 'dashboard' && pathParts[2] ? pathParts[2] : null;
+
     async function loadDashboard() {
       try {
-        // Load patterns
-        const patRes = await fetch('/api/analytics/patterns');
+        // If company-specific, load company name
+        if (companyId) {
+          try {
+            const compRes = await fetch(`/api/companies/${companyId}/public`);
+            if (compRes.ok) {
+              const company = await compRes.json();
+              document.querySelector('h1').textContent = `📊 Dashboard — ${company.name}`;
+            }
+          } catch (e) {}
+        }
+
+        // Load patterns (global or per company)
+        const apiUrl = companyId ? `/api/analytics/patterns/${companyId}` : '/api/analytics/patterns';
+        const patRes = await fetch(apiUrl, { credentials: 'include' });
         if (!patRes.ok) throw new Error('Failed to load patterns');
         const patterns = await patRes.json();
 
@@ -94,20 +122,24 @@
           `).join('');
         document.getElementById('recursosChart').innerHTML = recursosHtml || '<p style="color: #6b7280;">Sin datos</p>';
 
+        // Store questionnaires for detail view
+        window._questionnaires = patterns.cuestionarios_recientes || [];
+
         // Render recent responses
-        const responsesHtml = (patterns.cuestionarios_recientes || [])
-          .map(q => {
+        const responsesHtml = window._questionnaires
+          .map((q, idx) => {
             const resp = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
             return `
-              <tr style="border-bottom: 1px solid #f0f0f0;">
+              <tr style="border-bottom: 1px solid #f0f0f0; cursor:pointer;" onclick="showDetail(${idx})">
                 <td style="padding: 12px;">${escapeHtml(resp.nombre_equipo || '-')}</td>
                 <td style="padding: 12px;">${escapeHtml(resp.nombre_iniciativa || '-')}</td>
                 <td style="padding: 12px;">${escapeHtml(resp.lider_equipo || '-')}</td>
-                <td style="padding: 12px;">${new Date(q.submitted_at).toLocaleDateString('es-ES')}</td>
+                <td style="padding: 12px;">${q.submitted_at ? new Date(q.submitted_at).toLocaleDateString('es-ES') : '-'}</td>
+                <td style="padding: 12px;"><button class="btn" style="background:#7B3FA8; color:white; font-size:12px; padding:4px 12px; border:none; border-radius:4px; cursor:pointer;" onclick="event.stopPropagation(); showDetail(${idx})">👁 Ver</button></td>
               </tr>
             `;
           }).join('');
-        document.getElementById('responsesTable').innerHTML = responsesHtml || '<tr><td colspan="4" style="padding: 12px; text-align: center; color: #6b7280;">Sin respuestas</td></tr>';
+        document.getElementById('responsesTable').innerHTML = responsesHtml || '<tr><td colspan="5" style="padding: 12px; text-align: center; color: #6b7280;">Sin respuestas</td></tr>';
       } catch (error) {
         console.error('Error loading dashboard:', error);
         alert('Error al cargar el dashboard');
@@ -145,6 +177,81 @@
         alert('Error al exportar Excel');
       }
     });
+
+    function showDetail(idx) {
+      const q = window._questionnaires[idx];
+      const r = typeof q.responses === 'string' ? JSON.parse(q.responses) : q.responses;
+
+      const section = (title, content) => `
+        <div style="margin-bottom:32px;">
+          <h3 style="color:#7B3FA8; margin-bottom:12px; font-size:17px; font-weight:700;">${title}</h3>
+          <div style="background:#faf8fc; padding:20px 24px; border-radius:10px; border-left:4px solid #7B3FA8; line-height:1.7;">${content}</div>
+        </div>`;
+
+      const field = (label, value) => value ? `<div style="margin-bottom:14px;"><strong style="color:#374151; display:block; margin-bottom:4px; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">${label}</strong> <span style="color:#1f2937; font-size:15px;">${escapeHtml(value)}</span></div>` : '';
+
+      const chips = (items) => (items || []).map(i => `<span style="display:inline-block; background:#E9A020; color:white; padding:5px 14px; border-radius:16px; font-size:13px; font-weight:500; margin:3px 6px 3px 0;">${escapeHtml(i)}</span>`).join('');
+
+      const impactoRows = (r.impacto || []).filter(i => i.resultado).map(i => `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:12px 10px;">${escapeHtml(i.resultado)}</td>
+          <td style="padding:12px 10px;">${escapeHtml(i.indicador)}</td>
+          <td style="padding:12px 10px;">${escapeHtml(i.meta)}</td>
+        </tr>`).join('');
+
+      const riesgoRows = (r.riesgos || []).filter(i => i.riesgo).map(i => `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:12px 10px;">${escapeHtml(i.riesgo)}</td>
+          <td style="padding:12px 10px;">${escapeHtml(i.mitigacion)}</td>
+        </tr>`).join('');
+
+      document.getElementById('detailContent').innerHTML = `
+        <div style="margin-bottom:32px; padding-bottom:24px; border-bottom:2px solid #f3f4f6;">
+          <h2 style="color:#3A1259; margin-bottom:8px; font-size:26px; font-weight:700;">${escapeHtml(r.nombre_equipo || 'Equipo')}</h2>
+          <p style="color:#6b7280; font-size:15px; line-height:1.6;">${escapeHtml(r.nombre_iniciativa || '')} &nbsp;·&nbsp; ${escapeHtml(r.lider_equipo || '')} &nbsp;·&nbsp; ${r.fecha || ''}</p>
+        </div>
+
+        ${section('🎯 Reto de Negocio',
+          field('Problema / Oportunidad', r.reto?.problema) +
+          field('Evidencias', r.reto?.evidencias) +
+          (r.reto?.impactos?.length ? `<div style="margin-bottom:10px;"><strong style="color:#374151;">Impactos:</strong> ${chips(r.reto.impactos)}</div>` : '') +
+          field('Descripción', r.reto?.descripcion)
+        )}
+
+        ${section('💡 Solución',
+          field('Propuesta', r.solucion?.propuesta) +
+          field('Diferenciadores', r.solucion?.diferenciadores)
+        )}
+
+        ${impactoRows ? section('📊 Impacto Esperado', `
+          <table style="width:100%; font-size:13px; border-collapse:collapse;">
+            <thead><tr style="background:#f3f4f6;">
+              <th style="padding:8px; text-align:left;">Resultado</th>
+              <th style="padding:8px; text-align:left;">Indicador</th>
+              <th style="padding:8px; text-align:left;">Meta</th>
+            </tr></thead>
+            <tbody>${impactoRows}</tbody>
+          </table>`) : ''}
+
+        ${section('🛠️ Recursos',
+          (r.recursos?.tipos?.length ? `<div style="margin-bottom:10px;">${chips(r.recursos.tipos)}</div>` : '') +
+          field('Detalle', r.recursos?.detalle)
+        )}
+
+        ${riesgoRows ? section('⚠️ Riesgos', `
+          <table style="width:100%; font-size:13px; border-collapse:collapse;">
+            <thead><tr style="background:#f3f4f6;">
+              <th style="padding:8px; text-align:left;">Riesgo</th>
+              <th style="padding:8px; text-align:left;">Mitigación</th>
+            </tr></thead>
+            <tbody>${riesgoRows}</tbody>
+          </table>`) : ''}
+
+        ${r.necesidades ? section('📌 Necesidades Adicionales', field('', r.necesidades)) : ''}
+      `;
+
+      document.getElementById('detailModal').style.display = 'block';
+    }
 
     function escapeHtml(text) {
       const div = document.createElement('div');
