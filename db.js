@@ -71,6 +71,7 @@ function initSqlite() {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, deleted_at DATETIME
   )`);
   sqliteDb.run(`ALTER TABLE companies ADD COLUMN logo_url TEXT`, () => {});
+  sqliteDb.run(`ALTER TABLE companies ADD COLUMN sector TEXT`, () => {});
   sqliteDb.run(`CREATE TABLE IF NOT EXISTS teams (
     id TEXT PRIMARY KEY, company_id TEXT NOT NULL, name TEXT NOT NULL, avatar_color TEXT DEFAULT '#3B82F6',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, deleted_at DATETIME,
