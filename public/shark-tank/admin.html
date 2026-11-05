@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shark Tank — Admin</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .st-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .st-header h2{font-size:22px;color:#3A1259}
+  .events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+  .event-card{background:#fff;border:1px solid #D4C0E8;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .event-card .ev-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .event-card .ev-logo{width:40px;height:40px;border-radius:8px;object-fit:contain;background:#F6F1FC;padding:4px}
+  .event-card .ev-logo.placeholder{display:flex;align-items:center;justify-content:center;font-size:20px;color:#7B3FA8}
+  .event-card h3{font-size:17px;color:#1C0D36;margin:0}
+  .event-card .ev-company{font-size:13px;color:#6B547E}
+  .event-card .ev-meta{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .ev-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .ev-badge.teams{background:#EDE9FE;color:#7B3FA8}
+  .ev-badge.panel{background:#FEF3C7;color:#92400E}
+  .ev-badge.active{background:#D1FAE5;color:#065F46}
+  .ev-badge.closed{background:#FEE2E2;color:#991B1B}
+  .event-card .ev-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .ev-actions .btn{font-size:13px;padding:7px 14px}
+
+  .modal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);align-items:center;justify-content:center}
+  .modal.show{display:flex}
+  .modal-box{background:#fff;border-radius:16px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #D4C0E8}
+  .modal-head h3{font-size:18px;color:#3A1259;margin:0}
+  .modal-head button{background:none;border:none;font-size:24px;cursor:pointer;color:#6B547E}
+  .modal-body{padding:22px}
+  .fg{margin-bottom:16px}
+  .fg label{display:block;font-size:13px;font-weight:600;color:#3A1259;margin-bottom:5px}
+  .fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1px solid #D4C0E8;border-radius:8px;font-size:14px;font-family:inherit}
+  .fg textarea{resize:vertical;min-height:80px}
+  .fg .hint{font-size:12px;color:#6B547E;margin-top:4px}
+  .modal-foot{display:flex;gap:10px;padding:0 22px 22px;justify-content:flex-end}
+
+  .links-box{background:#F6F1FC;border-radius:10px;padding:14px;margin-top:12px}
+  .links-box label{font-size:12px;font-weight:600;color:#7B3FA8;margin-bottom:4px;display:block}
+  .links-box .link-row{display:flex;gap:8px;margin-bottom:8px}
+  .links-box input{flex:1;padding:8px;font-size:12px;font-family:monospace;background:#fff;border:1px solid #D4C0E8;border-radius:6px}
+  .links-box .btn{font-size:12px;padding:6px 12px;white-space:nowrap}
+  .qr-modal{display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
+  .qr-modal.show{display:flex}
+  .qr-box{background:#fff;border-radius:16px;padding:28px;text-align:center;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .qr-box h3{margin:0 0 4px;color:#3A1259;font-size:16px}
+  .qr-box .qr-subtitle{font-size:12px;color:#6B547E;margin-bottom:16px;word-break:break-all}
+  .qr-box canvas{display:block;margin:0 auto 16px}
+  .qr-box .qr-actions{display:flex;gap:8px;justify-content:center}
+  .qr-box .qr-actions .btn{font-size:13px;padding:8px 16px}
+
+  .panelista-list{list-style:none;padding:0}
+  .panelista-list li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0e6f5}
+  .panelista-list li:last-child{border:none}
+  .panelista-list .p-name{flex:1;font-size:14px}
+  .panelista-list .p-del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px}
+  .add-pan{display:flex;gap:8px;margin-top:8px}
+  .add-pan input{flex:1;padding:8px 12px;border:1px solid #D4C0E8;border-radius:8px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-content">
+      <img src="/img/lhh-logo.webp" alt="LHH" style="height:48px">
+      <h1 style="font-family:'Playfair Display',serif;font-size:28px;color:#7B3FA8">🦈 Shark Tank — Admin</h1>
+      <div class="header-actions">
+        <a href="/" class="btn btn-secondary">← Mesas de Trabajo</a>
+      </div>
+    </div>
+  </header>
+  <main class="app-main">
+    <div class="st-header">
+      <h2>Eventos Shark Tank</h2>
+      <button class="btn btn-primary" onclick="openCreate()">+ Nuevo Evento</button>
+    </div>
+    <div id="eventsList" class="events-grid"></div>
+  </main>
+</div>
+
+<!-- Modal: Crear/Editar Evento -->
+<div class="modal" id="eventModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Nuevo Evento Shark Tank</h3>
+      <button onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label>Empresa *</label>
+        <select id="evCompany"><option value="">Seleccionar empresa...</option></select>
+      </div>
+      <div class="fg">
+        <label>Nombre del Evento *</label>
+        <input type="text" id="evName" placeholder="Ej: Programa de Desarrollo Comercial 2026">
+      </div>
+      <div class="fg">
+        <label>Panelistas</label>
+        <div class="hint">Agrega los nombres de los panelistas que evaluarán</div>
+        <ul class="panelista-list" id="panList"></ul>
+        <div class="add-pan">
+          <input type="text" id="panInput" placeholder="Nombre del panelista">
+          <button class="btn btn-primary btn-small" onclick="addPanelista()">+ Agregar</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Estado</label>
+        <select id="evStatus">
+          <option value="active">Activo</option>
+          <option value="closed">Cerrado</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="saveBtn" onclick="saveEvent()">Guardar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/sidebar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+var events = [];
+var editingId = null;
+var panelistas = [];
+var baseUrl = window.location.origin;
+
+async function loadEvents() {
+  var res = await fetch('/api/shark-tank/events');
+  events = await res.json();
+  render();
+}
+
+function render() {
+  var el = document.getElementById('eventsList');
+  if (!events.length) {
+    el.innerHTML = '<p style="color:#6B547E;text-align:center;padding:40px">No hay eventos. Crea uno con "+ Nuevo Evento".</p>';
+    return;
+  }
+  el.innerHTML = events.map(function(ev) {
+    var logo = ev.company_logo
+      ? '<img class="ev-logo" src="' + ev.company_logo + '" alt="">'
+      : '<div class="ev-logo placeholder">🏢</div>';
+    var pans = (ev.panelistas || []);
+    var statusCls = ev.status === 'active' ? 'active' : 'closed';
+    var statusTxt = ev.status === 'active' ? 'Activo' : 'Cerrado';
+    var partLink = baseUrl + '/shark-tank/participantes?event=' + ev.id;
+    var panelLink = baseUrl + '/shark-tank/panel?event=' + ev.id;
+    return '<div class="event-card">'
+      + '<div class="ev-top">' + logo + '<div><h3>' + ev.name + '</h3><div class="ev-company">' + ev.company_name + '</div></div></div>'
+      + '<div class="ev-meta">'
+      + '  <span class="ev-badge teams">👥 ' + (ev.teams?.length || 0) + ' equipos</span>'
+      + '  <span class="ev-badge panel">🎤 ' + pans.length + ' panelistas</span>'
+      + '  <span class="ev-badge ' + statusCls + '">' + statusTxt + '</span>'
+      + '</div>'
+      + '<div class="links-box">'
+      + '  <label>👥 Link Participantes</label>'
+      + '  <div class="link-row"><input readonly value="' + partLink + '"><button class="btn btn-secondary btn-small" onclick="copyLink(\'' + partLink + '\')">📋 Copiar</button><button class="btn btn-secondary btn-small" onclick="showQR(\'' + partLink + '\',\'Participantes\',\'' + ev.name.replace(/'/g, "\\'") + '\')">📱 QR</button></div>'
+      + '  <label style="margin-top:10px">🎤 Link Panelistas</label>'
+      + '  <div class="link-row"><input readonly value="' + panelLink + '"><button class="btn btn-secondary btn-small" onclick="copyLink(\'' + panelLink + '\')">📋 Copiar</button><button class="btn btn-secondary btn-small" onclick="showQR(\'' + panelLink + '\',\'Panel\',\'' + ev.name.replace(/'/g, "\\'") + '\')">📱 QR</button></div>'
+      + '</div>'
+      + '<div class="ev-actions">'
+      + '  <button class="btn btn-secondary btn-small" onclick="editEvent(\'' + ev.id + '\')">✏️ Editar</button>'
+      + '  <button class="btn btn-danger btn-small" onclick="deleteEvent(\'' + ev.id + '\',\'' + ev.name.replace(/'/g, "\\'") + '\')">🗑️</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url);
+  alert('Link copiado!');
+}
+
+async function loadCompanies() {
+  var res = await fetch('/api/companies');
+  var companies = await res.json();
+  var sel = document.getElementById('evCompany');
+  sel.innerHTML = '<option value="">Seleccionar empresa...</option>';
+  companies.forEach(function(c) {
+    sel.innerHTML += '<option value="' + c.id + '">' + c.name + '</option>';
+  });
+}
+
+function openCreate() {
+  editingId = null;
+  panelistas = [];
+  document.getElementById('modalTitle').textContent = 'Nuevo Evento Shark Tank';
+  document.getElementById('evName').value = '';
+  document.getElementById('evCompany').value = '';
+  document.getElementById('evCompany').disabled = false;
+  document.getElementById('evStatus').value = 'active';
+  renderPanelistas();
+  loadCompanies();
+  document.getElementById('eventModal').classList.add('show');
+}
+
+function editEvent(id) {
+  var ev = events.find(function(e) { return e.id === id; });
+  if (!ev) return;
+  editingId = id;
+  panelistas = (ev.panelistas || []).slice();
+  document.getElementById('modalTitle').textContent = 'Editar Evento';
+  document.getElementById('evName').value = ev.name;
+  document.getElementById('evStatus').value = ev.status || 'active';
+  loadCompanies().then(function() {
+    document.getElementById('evCompany').value = ev.company_id;
+    document.getElementById('evCompany').disabled = true;
+  });
+  renderPanelistas();
+  document.getElementById('eventModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('eventModal').classList.remove('show');
+}
+
+function addPanelista() {
+  var input = document.getElementById('panInput');
+  var name = input.value.trim();
+  if (!name) return;
+  panelistas.push(name);
+  input.value = '';
+  renderPanelistas();
+}
+
+function removePanelista(i) {
+  panelistas.splice(i, 1);
+  renderPanelistas();
+}
+
+function renderPanelistas() {
+  var el = document.getElementById('panList');
+  el.innerHTML = panelistas.map(function(p, i) {
+    return '<li><span class="p-name">🎤 ' + p + '</span><button class="p-del" onclick="removePanelista(' + i + ')">✕</button></li>';
+  }).join('');
+}
+
+document.getElementById('panInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); addPanelista(); }
+});
+
+async function saveEvent() {
+  var name = document.getElementById('evName').value.trim();
+  var companyId = document.getElementById('evCompany').value;
+  var status = document.getElementById('evStatus').value;
+  if (!name || (!editingId && !companyId)) return alert('Completa todos los campos requeridos');
+
+  var body = { name: name, panelistas: panelistas, status: status };
+  if (!editingId) body.company_id = companyId;
+
+  var url = editingId ? '/api/shark-tank/events/' + editingId : '/api/shark-tank/events';
+  var method = editingId ? 'PUT' : 'POST';
+
+  var res = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (res.ok) {
+    closeModal();
+    loadEvents();
+  } else {
+    var err = await res.json();
+    alert('Error: ' + err.error);
+  }
+}
+
+async function deleteEvent(id, name) {
+  if (!confirm('¿Eliminar el evento "' + name + '"? Esta acción no se puede deshacer.')) return;
+  await fetch('/api/shark-tank/events/' + id, { method: 'DELETE' });
+  loadEvents();
+}
+
+loadEvents();
+
+function showQR(url, type, evName) {
+  var m = document.getElementById('qrModal');
+  document.getElementById('qrTitle').textContent = type + ' — ' + evName;
+  document.getElementById('qrSubtitle').textContent = url;
+  m.classList.add('show');
+  var qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+  var size = 260, modules = qr.getModuleCount(), cell = Math.floor(size / modules), margin = Math.floor((size - cell * modules) / 2);
+  var canvas = document.getElementById('qrCanvas'); canvas.width = size; canvas.height = size;
+  var ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size); ctx.fillStyle = '#3A1259';
+  for (var r = 0; r < modules; r++) for (var c = 0; c < modules; c++) if (qr.isDark(r, c)) ctx.fillRect(margin + c * cell, margin + r * cell, cell, cell);
+}
+function closeQR() { document.getElementById('qrModal').classList.remove('show'); }
+function downloadQR(type, evName) {
+  var canvas = document.getElementById('qrCanvas');
+  var a = document.createElement('a');
+  a.download = 'QR-' + type + '-' + evName.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+</script>
+<div class="qr-modal" id="qrModal" onclick="if(event.target===this)closeQR()">
+  <div class="qr-box">
+    <h3 id="qrTitle"></h3>
+    <div class="qr-subtitle" id="qrSubtitle"></div>
+    <canvas id="qrCanvas"></canvas>
+    <div class="qr-actions">
+      <button class="btn btn-secondary" onclick="closeQR()">Cerrar</button>
+      <button class="btn btn-primary" onclick="downloadQR(document.getElementById('qrTitle').textContent.split(' — ')[0], document.getElementById('qrTitle').textContent.split(' — ')[1]||'')">📥 Descargar PNG</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

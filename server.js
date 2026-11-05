@@ -536,6 +536,290 @@ app.get('/api/questionnaires/:id/pdf', async (req, res) => {
   }
 });
 
+/* ── Shark Tank: Pages ─────────────────────────────── */
+app.get('/shark-tank', requireAuth, (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'index.html')));
+app.get('/shark-tank/admin', requireAuth, (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'admin.html')));
+app.get('/shark-tank/participantes', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'participantes.html')));
+app.get('/shark-tank/panel', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'panel.html')));
+app.get('/shark-tank/admin/participantes-results', requireAuth, (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'participantes-results.html')));
+app.get('/shark-tank/admin/panel-results', requireAuth, (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'shark-tank', 'panel-results.html')));
+
+/* ── Shark Tank: Events CRUD (admin) ─────────────── */
+app.get('/api/shark-tank/events', requireAuth, async (req, res) => {
+  try {
+    const events = await db.getSTEvents();
+    for (const ev of events) {
+      ev.panelistas = typeof ev.panelistas === 'string' ? JSON.parse(ev.panelistas) : ev.panelistas;
+      const company = await db.getCompany(ev.company_id);
+      ev.company_name = company?.name || '(eliminada)';
+      ev.company_logo = company?.logo_url || null;
+      const teams = await db.getTeamsByCompany(ev.company_id);
+      ev.teams = teams;
+    }
+    res.json(events);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/shark-tank/events', requireAuth, async (req, res) => {
+  const { company_id, name, panelistas } = req.body;
+  if (!company_id || !name?.trim()) return res.status(400).json({ error: 'company_id y name requeridos' });
+  try {
+    const event = await db.createSTEvent(nanoid(12), company_id, name.trim(), panelistas || []);
+    res.status(201).json(event);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/shark-tank/events/:id', requireAuth, async (req, res) => {
+  const { name, panelistas, status } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'name requerido' });
+  try {
+    const event = await db.updateSTEvent(req.params.id, { name: name.trim(), panelistas, status });
+    res.json(event);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/shark-tank/events/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteSTEvent(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ── Shark Tank: Public config (for voting pages) ── */
+app.get('/api/shark-tank/events/:id/config', async (req, res) => {
+  try {
+    const event = await db.getSTEvent(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Evento no encontrado' });
+    const company = await db.getCompany(event.company_id);
+    const teams = await db.getTeamsByCompany(event.company_id);
+    const panelistas = typeof event.panelistas === 'string' ? JSON.parse(event.panelistas) : event.panelistas;
+    res.json({
+      id: event.id,
+      name: event.name,
+      company_name: company?.name || '',
+      company_logo: company?.logo_url || null,
+      teams: teams.map(t => ({ id: t.id, name: t.name })),
+      panelistas,
+      status: event.status
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ── Shark Tank: Voting API ──────────────────────── */
+app.post('/api/shark-tank/participantes/vote', async (req, res) => {
+  try {
+    const { event_id, device_id, mi_equipo, equipo_evaluado, avatar, impacto, viabilidad, reconocimientos, lider_del_dia, lider_por_que } = req.body;
+    if (!mi_equipo || !equipo_evaluado || !impacto || !viabilidad) return res.status(400).json({ error: 'Campos requeridos faltantes' });
+
+    // Check for duplicate: same person (device) voting same team in same event
+    const dup = await db.query(
+      'SELECT id FROM st_participant_votes WHERE event_id = ? AND device_id = ? AND equipo_evaluado = ?',
+      [event_id || '', device_id || '', equipo_evaluado]
+    );
+    if (dup.rows.length) return res.status(409).json({ error: 'Ya votaste por este equipo', duplicate: true });
+
+    const id = nanoid(12);
+    await db.query(
+      'INSERT INTO st_participant_votes (id, event_id, device_id, mi_equipo, equipo_evaluado, avatar, impacto, viabilidad, reconocimientos, lider_del_dia, lider_por_que) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, event_id || '', device_id || '', mi_equipo, equipo_evaluado, avatar || '', impacto, viabilidad, reconocimientos || '', lider_del_dia || '', lider_por_que || '']
+    );
+    res.status(201).json({ ok: true, id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/shark-tank/panel/vote', async (req, res) => {
+  try {
+    const { event_id, device_id, panelista, grupo, c1, c2, c3, c4, c5, c6, r1, r2, r3, r4, r5, r6, r7, comentario } = req.body;
+    if (!panelista || !grupo || !c1) return res.status(400).json({ error: 'Campos requeridos faltantes' });
+
+    // Check for duplicate: same panelista voting same group in same event
+    const dup = await db.query(
+      'SELECT id FROM st_panel_votes WHERE event_id = ? AND panelista = ? AND grupo = ?',
+      [event_id || '', panelista, grupo]
+    );
+    if (dup.rows.length) return res.status(409).json({ error: 'Ya calificaste este grupo', duplicate: true });
+
+    const id = nanoid(12);
+    await db.query(
+      'INSERT INTO st_panel_votes (id, event_id, device_id, panelista, grupo, c1, c2, c3, c4, c5, c6, r1, r2, r3, r4, r5, r6, r7, comentario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, event_id || '', device_id || '', panelista, grupo, c1, c2, c3, c4, c5, c6, r1 ?? null, r2 ?? null, r3 ?? null, r4 ?? null, r5 ?? null, r6 ?? null, r7 ?? null, comentario || '']
+    );
+    res.status(201).json({ ok: true, id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check what a participant has already voted
+app.get('/api/shark-tank/participantes/voted', async (req, res) => {
+  try {
+    const { event_id, device_id } = req.query;
+    if (!event_id || !device_id) return res.json([]);
+    const result = await db.query(
+      'SELECT equipo_evaluado FROM st_participant_votes WHERE event_id = ? AND device_id = ?',
+      [event_id, device_id]
+    );
+    res.json(result.rows.map(r => r.equipo_evaluado));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check what a panelista has already voted
+app.get('/api/shark-tank/panel/voted', async (req, res) => {
+  try {
+    const { event_id, panelista } = req.query;
+    if (!event_id || !panelista) return res.json([]);
+    const result = await db.query(
+      'SELECT grupo FROM st_panel_votes WHERE event_id = ? AND panelista = ?',
+      [event_id, panelista]
+    );
+    res.json(result.rows.map(r => r.grupo));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/shark-tank/panel/avatars', async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    if (!event_id) return res.json([]);
+    const result = await db.query(
+      'SELECT avatar, name, device_id FROM st_panel_avatars WHERE event_id = ?',
+      [event_id]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/shark-tank/panel/claim-avatar', async (req, res) => {
+  try {
+    const { event_id, avatar, name, device_id } = req.body;
+    if (!event_id || !avatar || !name || !device_id) return res.status(400).json({ error: 'Campos requeridos faltantes' });
+
+    // Check if this device already claimed an avatar for this event
+    const existing = await db.query(
+      'SELECT id, avatar FROM st_panel_avatars WHERE event_id = ? AND device_id = ?',
+      [event_id, device_id]
+    );
+    if (existing.rows.length) {
+      // Update their avatar choice
+      await db.query(
+        'DELETE FROM st_panel_avatars WHERE event_id = ? AND device_id = ?',
+        [event_id, device_id]
+      );
+    }
+
+    // Check if avatar is already taken by someone else
+    const taken = await db.query(
+      'SELECT id FROM st_panel_avatars WHERE event_id = ? AND avatar = ?',
+      [event_id, avatar]
+    );
+    if (taken.rows.length) return res.status(409).json({ error: 'Este personaje ya fue elegido por otro panelista', taken: true });
+
+    // Check if name is already taken by someone else
+    const nameTaken = await db.query(
+      'SELECT id FROM st_panel_avatars WHERE event_id = ? AND name = ?',
+      [event_id, name]
+    );
+    if (nameTaken.rows.length) return res.status(409).json({ error: 'Este nombre ya fue elegido por otro panelista', taken: true });
+
+    const id = nanoid(12);
+    await db.query(
+      'INSERT INTO st_panel_avatars (id, event_id, avatar, name, device_id) VALUES (?, ?, ?, ?, ?)',
+      [id, event_id, avatar, name, device_id]
+    );
+    res.status(201).json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/shark-tank/participantes/avatars', async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    if (!event_id) return res.json([]);
+    const result = await db.query(
+      'SELECT avatar, device_id FROM st_participant_avatars WHERE event_id = ?',
+      [event_id]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/shark-tank/participantes/claim-avatar', async (req, res) => {
+  try {
+    const { event_id, avatar, mi_equipo, device_id } = req.body;
+    if (!event_id || !avatar || !mi_equipo || !device_id) return res.status(400).json({ error: 'Campos requeridos faltantes' });
+
+    const existing = await db.query(
+      'SELECT id, avatar FROM st_participant_avatars WHERE event_id = ? AND device_id = ?',
+      [event_id, device_id]
+    );
+    if (existing.rows.length) {
+      await db.query(
+        'DELETE FROM st_participant_avatars WHERE event_id = ? AND device_id = ?',
+        [event_id, device_id]
+      );
+    }
+
+    const taken = await db.query(
+      'SELECT id FROM st_participant_avatars WHERE event_id = ? AND avatar = ?',
+      [event_id, avatar]
+    );
+    if (taken.rows.length) return res.status(409).json({ error: 'Este personaje ya fue elegido por otro participante', taken: true });
+
+    const id = nanoid(12);
+    await db.query(
+      'INSERT INTO st_participant_avatars (id, event_id, avatar, mi_equipo, device_id) VALUES (?, ?, ?, ?, ?)',
+      [id, event_id, avatar, mi_equipo, device_id]
+    );
+    res.status(201).json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/shark-tank/events/:id/votes/participantes', requireAuth, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM st_participant_votes WHERE event_id = ? ORDER BY created_at DESC', [req.params.id]);
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/shark-tank/events/:id/votes/panel', requireAuth, async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM st_panel_votes WHERE event_id = ? ORDER BY created_at DESC', [req.params.id]);
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ── Health Check ──────────────────────────────────── */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

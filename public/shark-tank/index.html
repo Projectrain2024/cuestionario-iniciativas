@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shark Tank — Módulos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#4E185A;--p2:#6B2D7A;--pl:#F3ECF5;--c:#E8604C;--bg:#F6F3F7;--surface:#FFFFFF;--fg:#24202A;--muted:#6B6372;--onp:#FFFFFF;--line:#E6DFE9;
+  --shadow:0 1px 2px rgba(36,32,42,.05),0 18px 40px -26px rgba(78,24,90,.45);--fd:'Fraunces',Georgia,serif;--fb:'Inter',Arial,sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--p:#CBA6D8;--p2:#B78EC6;--pl:#2D2133;--c:#F07E6C;--bg:#141016;--surface:#1F1923;--fg:#F2ECF4;--muted:#B0A6B6;--onp:#17121A;--line:#372D3D;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -26px rgba(0,0,0,.8)}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);font-family:var(--fb);color:var(--fg)}
+.wrap{max-width:520px;margin:0 auto;padding:40px 16px}
+h1{font:600 32px/1.15 var(--fd);text-align:center;margin-bottom:8px}
+.sub{text-align:center;color:var(--muted);margin-bottom:32px}
+.card{display:block;background:var(--surface);border-radius:20px;padding:28px 24px;box-shadow:var(--shadow);text-decoration:none;color:var(--fg);transition:transform .15s}
+.card+.card{margin-top:16px}
+.card:hover{transform:translateY(-3px)}
+.tag{font:600 11px var(--fb);letter-spacing:1.4px;text-transform:uppercase;color:var(--c);margin-bottom:6px}
+.card h2{font:600 22px/1.2 var(--fd)}
+.card p{color:var(--muted);font-size:14px;margin-top:6px}
+.arrow{display:inline-block;margin-top:12px;font:700 14px var(--fb);color:var(--p)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:32px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Shark Tank</h1>
+  <p class="sub" id="sub">Cargando...</p>
+  <a class="card" id="linkPart" href="#">
+    <div class="tag">Módulo 1</div>
+    <h2>Votación Participantes</h2>
+    <p>Evalúa el impacto y viabilidad de cada equipo. Envía reconocimientos y nomina al Líder del día.</p>
+    <span class="arrow">Abrir →</span>
+  </a>
+  <a class="card" id="linkPanel" href="#">
+    <div class="tag">Módulo 2</div>
+    <h2>Rúbrica del Panel</h2>
+    <p>Califica las 6 competencias, verifica los 7 requisitos mínimos y deja tu comentario como panelista.</p>
+    <span class="arrow">Abrir →</span>
+  </a>
+  <footer>Shark Tank · LHH</footer>
+</div>
+<script>
+(function(){
+  var eventId = new URLSearchParams(window.location.search).get('event');
+  if (!eventId) { document.getElementById('sub').textContent = 'Link sin evento. Solicita el link correcto al administrador.'; return; }
+  document.getElementById('linkPart').href = '/shark-tank/participantes?event=' + eventId;
+  document.getElementById('linkPanel').href = '/shark-tank/panel?event=' + eventId;
+  fetch('/api/shark-tank/events/' + eventId + '/config')
+    .then(function(r) { return r.json(); })
+    .then(function(cfg) { document.getElementById('sub').textContent = cfg.company_name + ' · ' + cfg.name + ' · LHH'; })
+    .catch(function() { document.getElementById('sub').textContent = 'Evento no encontrado'; });
+})();
+</script>
+</body>
+</html>

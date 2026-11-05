@@ -50,6 +50,69 @@ if (isPg) {
           updated_at TIMESTAMP DEFAULT NOW()
         )
       `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS st_events (
+          id TEXT PRIMARY KEY,
+          company_id TEXT NOT NULL REFERENCES companies(id),
+          name TEXT NOT NULL,
+          panelistas TEXT DEFAULT '[]',
+          status TEXT DEFAULT 'active',
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          deleted_at TIMESTAMP
+        )
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS st_participant_votes (
+          id TEXT PRIMARY KEY,
+          event_id TEXT,
+          device_id TEXT,
+          mi_equipo TEXT,
+          equipo_evaluado TEXT,
+          impacto INTEGER,
+          viabilidad INTEGER,
+          reconocimientos TEXT DEFAULT '',
+          lider_del_dia TEXT DEFAULT '',
+          lider_por_que TEXT DEFAULT '',
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS st_panel_votes (
+          id TEXT PRIMARY KEY,
+          event_id TEXT,
+          device_id TEXT,
+          panelista TEXT,
+          grupo TEXT,
+          c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER,
+          r1 REAL, r2 REAL, r3 REAL, r4 REAL, r5 REAL, r6 REAL, r7 REAL,
+          comentario TEXT DEFAULT '',
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS st_panel_avatars (
+          id TEXT PRIMARY KEY,
+          event_id TEXT NOT NULL,
+          avatar TEXT NOT NULL,
+          name TEXT NOT NULL,
+          device_id TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(event_id, avatar)
+        )
+      `);
+      await client.query(`ALTER TABLE st_participant_votes ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT ''`).catch(() => {});
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS st_participant_avatars (
+          id TEXT PRIMARY KEY,
+          event_id TEXT NOT NULL,
+          avatar TEXT NOT NULL,
+          mi_equipo TEXT NOT NULL,
+          device_id TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(event_id, avatar)
+        )
+      `);
       console.log('✅ PostgreSQL tables ready');
     } finally {
       client.release();
@@ -72,6 +135,7 @@ function initSqlite() {
   )`);
   sqliteDb.run(`ALTER TABLE companies ADD COLUMN logo_url TEXT`, () => {});
   sqliteDb.run(`ALTER TABLE companies ADD COLUMN sector TEXT`, () => {});
+  sqliteDb.run(`ALTER TABLE st_participant_votes ADD COLUMN avatar TEXT DEFAULT ''`, () => {});
   sqliteDb.run(`CREATE TABLE IF NOT EXISTS teams (
     id TEXT PRIMARY KEY, company_id TEXT NOT NULL, name TEXT NOT NULL, avatar_color TEXT DEFAULT '#3B82F6',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, deleted_at DATETIME,
@@ -82,6 +146,37 @@ function initSqlite() {
     access_token TEXT NOT NULL UNIQUE, status TEXT DEFAULT 'draft', responses TEXT DEFAULT '{}',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, submitted_at DATETIME, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (team_id) REFERENCES teams(id), FOREIGN KEY (company_id) REFERENCES companies(id)
+  )`);
+  sqliteDb.run(`CREATE TABLE IF NOT EXISTS st_events (
+    id TEXT PRIMARY KEY, company_id TEXT NOT NULL, name TEXT NOT NULL,
+    panelistas TEXT DEFAULT '[]', status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, deleted_at DATETIME,
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+  )`);
+  sqliteDb.run(`CREATE TABLE IF NOT EXISTS st_participant_votes (
+    id TEXT PRIMARY KEY, event_id TEXT, device_id TEXT, mi_equipo TEXT, equipo_evaluado TEXT,
+    impacto INTEGER, viabilidad INTEGER, reconocimientos TEXT DEFAULT '',
+    lider_del_dia TEXT DEFAULT '', lider_por_que TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  sqliteDb.run(`CREATE TABLE IF NOT EXISTS st_panel_votes (
+    id TEXT PRIMARY KEY, event_id TEXT, device_id TEXT, panelista TEXT, grupo TEXT,
+    c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER,
+    r1 REAL, r2 REAL, r3 REAL, r4 REAL, r5 REAL, r6 REAL, r7 REAL,
+    comentario TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  sqliteDb.run(`CREATE TABLE IF NOT EXISTS st_panel_avatars (
+    id TEXT PRIMARY KEY, event_id TEXT NOT NULL, avatar TEXT NOT NULL,
+    name TEXT NOT NULL, device_id TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(event_id, avatar)
+  )`);
+  sqliteDb.run(`CREATE TABLE IF NOT EXISTS st_participant_avatars (
+    id TEXT PRIMARY KEY, event_id TEXT NOT NULL, avatar TEXT NOT NULL,
+    mi_equipo TEXT NOT NULL, device_id TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(event_id, avatar)
   )`);
 }
 
@@ -210,6 +305,35 @@ module.exports = {
   getSubmittedQuestionnaires: async () => {
     const res = await query("SELECT * FROM questionnaires WHERE status = 'submitted' ORDER BY submitted_at DESC");
     return res.rows;
+  },
+
+  // ── Shark Tank Events ──
+  createSTEvent: async (id, companyId, name, panelistas) => {
+    await query('INSERT INTO st_events (id, company_id, name, panelistas) VALUES (?, ?, ?, ?)',
+      [id, companyId, name, JSON.stringify(panelistas || [])]);
+    return { id, company_id: companyId, name, panelistas, status: 'active' };
+  },
+
+  getSTEvents: async () => {
+    const res = await query('SELECT * FROM st_events WHERE deleted_at IS NULL ORDER BY created_at DESC');
+    return res.rows;
+  },
+
+  getSTEvent: async (id) => {
+    const res = await query('SELECT * FROM st_events WHERE id = ? AND deleted_at IS NULL', [id]);
+    return res.rows[0];
+  },
+
+  updateSTEvent: async (id, data) => {
+    const { name, panelistas, status } = data;
+    await query(`UPDATE st_events SET name = ?, panelistas = ?, status = ?, updated_at = ${now()} WHERE id = ? AND deleted_at IS NULL`,
+      [name, JSON.stringify(panelistas || []), status || 'active', id]);
+    return { id, name, panelistas, status };
+  },
+
+  deleteSTEvent: async (id) => {
+    await query('UPDATE st_events SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?', [id]);
+    return { id };
   },
 
   end: async () => {

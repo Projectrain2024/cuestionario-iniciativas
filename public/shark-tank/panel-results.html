@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resultados Panel — Shark Tank</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .st-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+  .st-header h2{font-size:22px;color:#3A1259;margin:0}
+  .ev-select{padding:9px 14px;border:1px solid #D4C0E8;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;min-width:260px}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .stat-card{background:#fff;border:1px solid #E6DFE9;border-radius:14px;padding:18px;text-align:center}
+  .stat-card .num{font-size:32px;font-weight:700;color:#4E185A}
+  .stat-card .lbl{font-size:12px;color:#6B547E;margin-top:4px;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .section-title{font-size:17px;font-weight:700;color:#3A1259;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
+  .section-title .icon{font-size:20px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:20px}
+  th{background:#F6F1FC;padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#6B547E;font-weight:700}
+  td{padding:10px 12px;border-top:1px solid #F0E6F5;font-size:13px;color:#24202A}
+  tr:hover td{background:#FDFBFE}
+  .bar-wrap{height:8px;background:#EDE9FE;border-radius:4px;overflow:hidden;min-width:50px}
+  .bar-fill{height:100%;border-radius:4px;transition:width .4s}
+  .bar-fill.c{background:#7B3FA8}
+  .bar-fill.avg{background:linear-gradient(90deg,#7B3FA8,#E8604C)}
+  .score{font-weight:700;font-size:14px}
+  .score.high{color:#2E7D5B}
+  .score.mid{color:#D97706}
+  .score.low{color:#EF4444}
+  .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+  .badge.gold{background:#FEF3C7;color:#92400E}
+  .badge.silver{background:#F3F4F6;color:#4B5563}
+  .badge.bronze{background:#FDEDD3;color:#9A3412}
+  .req-ok{color:#2E7D5B;font-weight:700}
+  .req-no{color:#EF4444;font-weight:700}
+  .req-partial{color:#D97706;font-weight:700}
+  .panelista-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#F6F1FC;color:#4E185A;margin:2px}
+  .comment-card{background:#fff;border:1px solid #E6DFE9;border-radius:14px;padding:16px;margin-top:10px}
+  .comment-card .cm-head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .comment-card .cm-avatar{font-size:22px}
+  .comment-card .cm-pan{font-weight:700;font-size:14px;color:#3A1259}
+  .comment-card .cm-team{font-size:12px;color:#6B547E}
+  .comment-card .cm-text{font-size:14px;color:#24202A;line-height:1.5}
+  .empty{text-align:center;padding:40px 20px;color:#6B547E}
+  .refresh-btn{background:none;border:1px solid #D4C0E8;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:#7B3FA8;font-weight:600}
+  .refresh-btn:hover{background:#F6F1FC}
+  .team-block{background:#fff;border:1px solid #E6DFE9;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .team-block h3{font-size:16px;color:#3A1259;margin:0 0 14px}
+  .comp-names{font-size:11px;color:#6B547E}
+  .tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+  .tab{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid #D4C0E8;background:#fff;cursor:pointer;color:#6B547E;transition:all .15s}
+  .tab.active{background:#4E185A;color:#fff;border-color:#4E185A}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-content">
+      <img src="/img/lhh-logo.webp" alt="LHH" style="height:48px">
+      <h1 style="font-family:'Playfair Display',serif;font-size:28px;color:#7B3FA8">🦈 Shark Tank — Admin</h1>
+      <div class="header-actions">
+        <a href="/shark-tank/admin" class="btn btn-secondary">← Eventos</a>
+      </div>
+    </div>
+  </header>
+  <main class="app-main">
+    <div class="st-header">
+      <h2>Resultados — Rúbrica del Panel</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="ev-select" id="eventSelect"><option value="">Seleccionar evento...</option></select>
+        <button class="refresh-btn" onclick="loadResults()" title="Refrescar">🔄</button>
+      </div>
+    </div>
+    <div id="content"><p class="empty">Selecciona un evento para ver los resultados.</p></div>
+  </main>
+</div>
+
+<script src="/js/sidebar.js"></script>
+<script>
+var COMP_LABELS=['Innovación y Adaptabilidad','Toma de Decisiones','Orientación a Resultados','Negociación Estratégica','Visión Estratégica','Liderazgo de Equipos'];
+var COMP_SHORT=['Innovación','Decisiones','Resultados','Negociación','Visión','Liderazgo'];
+var REQ_LABELS=['Sostener con data','Demostrar dónde ocurre','Explicar importancia','Beneficio final','Cómo lo ejecutarían','Gestión equipos 360','Objetivos e indicadores'];
+
+var events=[], config=null, votes=[], view='ranking';
+
+async function init(){
+  var r=await fetch('/api/shark-tank/events');
+  events=await r.json();
+  var sel=document.getElementById('eventSelect');
+  events.forEach(function(ev){
+    var o=document.createElement('option');
+    o.value=ev.id; o.textContent=ev.name+' — '+ev.company_name;
+    sel.appendChild(o);
+  });
+  sel.onchange=loadResults;
+  if(events.length===1){sel.value=events[0].id;loadResults();}
+}
+
+async function loadResults(){
+  var eid=document.getElementById('eventSelect').value;
+  if(!eid){document.getElementById('content').innerHTML='<p class="empty">Selecciona un evento para ver los resultados.</p>';return;}
+  var [cfgR,votesR]=await Promise.all([
+    fetch('/api/shark-tank/events/'+eid+'/config').then(function(r){return r.json();}),
+    fetch('/api/shark-tank/events/'+eid+'/votes/panel').then(function(r){return r.json();})
+  ]);
+  config=cfgR; votes=votesR;
+  render();
+}
+
+function setView(v){view=v;render();}
+
+function render(){
+  var el=document.getElementById('content');
+  if(!votes.length){el.innerHTML='<p class="empty">Aún no hay calificaciones del panel para este evento.</p>';return;}
+
+  var teams=config.teams||[];
+  var teamMap={};
+  teams.forEach(function(t){teamMap[t.id]=t.name;});
+
+  // Group votes by team (grupo)
+  var byTeam={};
+  var panelistas=new Set();
+  votes.forEach(function(v){
+    if(!byTeam[v.grupo])byTeam[v.grupo]=[];
+    byTeam[v.grupo].push(v);
+    panelistas.add(v.panelista);
+  });
+
+  // Per-team averages
+  var ranking=teams.map(function(t){
+    var tv=byTeam[t.id]||[];
+    var avgC=[0,0,0,0,0,0];
+    var avgR=[0,0,0,0,0,0,0];
+    var n=tv.length;
+    tv.forEach(function(v){
+      for(var i=0;i<6;i++)avgC[i]+=(v['c'+(i+1)]||0);
+      for(var j=0;j<7;j++)avgR[j]+=(v['r'+(j+1)]!=null?v['r'+(j+1)]:0);
+    });
+    if(n){
+      for(var i=0;i<6;i++)avgC[i]=avgC[i]/n;
+      for(var j=0;j<7;j++)avgR[j]=avgR[j]/n;
+    }
+    var totalComp=avgC.reduce(function(s,x){return s+x;},0)/6;
+    var reqMet=avgR.filter(function(x){return x>=0.5;}).length;
+    return {id:t.id,name:t.name,avgC:avgC,avgR:avgR,totalComp:totalComp,reqMet:reqMet,votes:tv,n:n};
+  }).sort(function(a,b){return b.totalComp-a.totalComp;});
+
+  var html='';
+
+  // Stats
+  html+='<div class="stats-row">';
+  html+='<div class="stat-card"><div class="num">'+panelistas.size+'</div><div class="lbl">Panelistas</div></div>';
+  html+='<div class="stat-card"><div class="num">'+votes.length+'</div><div class="lbl">Evaluaciones</div></div>';
+  html+='<div class="stat-card"><div class="num">'+teams.length+'</div><div class="lbl">Equipos</div></div>';
+  if(ranking.length){
+    html+='<div class="stat-card"><div class="num" style="font-size:20px">🏆 '+ranking[0].name+'</div><div class="lbl">Mejor puntuación ('+ranking[0].totalComp.toFixed(2)+')</div></div>';
+  }
+  html+='</div>';
+
+  // View tabs
+  html+='<div class="tabs">';
+  html+='<div class="tab'+(view==='ranking'?' active':'')+'" onclick="setView(\'ranking\')">📊 Ranking General</div>';
+  html+='<div class="tab'+(view==='detail'?' active':'')+'" onclick="setView(\'detail\')">📋 Detalle por Equipo</div>';
+  html+='<div class="tab'+(view==='comments'?' active':'')+'" onclick="setView(\'comments\')">💬 Comentarios</div>';
+  html+='</div>';
+
+  if(view==='ranking') html+=renderRanking(ranking);
+  else if(view==='detail') html+=renderDetail(ranking);
+  else html+=renderComments(ranking);
+
+  el.innerHTML=html;
+}
+
+function renderRanking(ranking){
+  var h='<div class="section-title"><span class="icon">📊</span> Ranking — Competencias (Promedio 1-5)</div>';
+  h+='<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Equipo</th>';
+  for(var i=0;i<6;i++)h+='<th title="'+COMP_LABELS[i]+'">'+COMP_SHORT[i]+'</th>';
+  h+='<th>Promedio</th><th>Requisitos</th><th>Evaluaciones</th></tr></thead><tbody>';
+
+  ranking.forEach(function(r,idx){
+    var medals=['gold','silver','bronze'];
+    var badge=idx<3?'<span class="badge '+medals[idx]+'">'+(idx+1)+'°</span>':'<span style="color:#6B547E">'+(idx+1)+'</span>';
+    var cls=r.totalComp>=4?'high':r.totalComp>=3?'mid':'low';
+    h+='<tr><td>'+badge+'</td><td><strong>'+r.name+'</strong></td>';
+    for(var i=0;i<6;i++){
+      var cc=r.avgC[i]>=4?'high':r.avgC[i]>=3?'mid':'low';
+      h+='<td><span class="score '+cc+'">'+r.avgC[i].toFixed(1)+'</span></td>';
+    }
+    h+='<td><span class="score '+cls+'">'+r.totalComp.toFixed(2)+'</span></td>';
+    h+='<td><span class="'+(r.reqMet>=6?'req-ok':r.reqMet>=4?'req-partial':'req-no')+'">'+r.reqMet+'/7</span></td>';
+    h+='<td>'+r.n+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+
+  // Radar-style breakdown: bar chart per competence
+  h+='<div class="section-title"><span class="icon">📈</span> Comparativa por Competencia</div>';
+  for(var ci=0;ci<6;ci++){
+    h+='<div style="margin-bottom:16px"><div style="font-size:13px;font-weight:700;color:#3A1259;margin-bottom:6px">'+COMP_LABELS[ci]+'</div>';
+    ranking.forEach(function(r){
+      var pct=r.avgC[ci]/5*100;
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">';
+      h+='<div style="width:140px;font-size:12px;color:#6B547E;text-align:right;flex-shrink:0">'+r.name+'</div>';
+      h+='<div class="bar-wrap" style="flex:1"><div class="bar-fill c" style="width:'+pct+'%"></div></div>';
+      h+='<div style="width:36px;font-size:12px;font-weight:700;color:#3A1259">'+r.avgC[ci].toFixed(1)+'</div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  return h;
+}
+
+function renderDetail(ranking){
+  var h='';
+  ranking.forEach(function(r,idx){
+    var medals=['🥇','🥈','🥉'];
+    var medal=idx<3?medals[idx]+' ':'';
+    h+='<div class="team-block">';
+    h+='<h3>'+medal+r.name+' <span style="font-size:13px;color:#6B547E;font-weight:400">('+r.n+' evaluaciones · Promedio: <strong>'+r.totalComp.toFixed(2)+'</strong>)</span></h3>';
+
+    // Competencias
+    h+='<table><thead><tr><th>Competencia</th><th>Promedio</th><th></th>';
+    r.votes.forEach(function(v){h+='<th><span class="panelista-tag">'+v.panelista+'</span></th>';});
+    h+='</tr></thead><tbody>';
+    for(var i=0;i<6;i++){
+      var cls=r.avgC[i]>=4?'high':r.avgC[i]>=3?'mid':'low';
+      h+='<tr><td><strong>'+COMP_SHORT[i]+'</strong><br><span class="comp-names">'+COMP_LABELS[i]+'</span></td>';
+      h+='<td><span class="score '+cls+'">'+r.avgC[i].toFixed(1)+'</span></td>';
+      h+='<td><div class="bar-wrap"><div class="bar-fill c" style="width:'+(r.avgC[i]/5*100)+'%"></div></div></td>';
+      r.votes.forEach(function(v){h+='<td style="text-align:center">'+v['c'+(i+1)]+'</td>';});
+      h+='</tr>';
+    }
+    h+='</tbody></table>';
+
+    // Requisitos
+    h+='<div style="margin-top:14px;font-size:13px;font-weight:700;color:#3A1259">Requisitos Mínimos ('+r.reqMet+'/7 cumplidos)</div>';
+    h+='<table><thead><tr><th>Requisito</th><th>Resultado</th>';
+    r.votes.forEach(function(v){h+='<th><span class="panelista-tag">'+v.panelista+'</span></th>';});
+    h+='</tr></thead><tbody>';
+    for(var j=0;j<7;j++){
+      var avg=r.avgR[j];
+      var cls2=avg>=0.5?'req-ok':'req-no';
+      h+='<tr><td>'+REQ_LABELS[j]+'</td>';
+      h+='<td><span class="'+cls2+'">'+(avg>=0.5?'✓ Sí':'✗ No')+'</span></td>';
+      r.votes.forEach(function(v){
+        var val=v['r'+(j+1)];
+        h+='<td style="text-align:center">'+(val?'<span class="req-ok">✓</span>':'<span class="req-no">✗</span>')+'</td>';
+      });
+      h+='</tr>';
+    }
+    h+='</tbody></table>';
+
+    h+='</div>';
+  });
+  return h;
+}
+
+function renderComments(ranking){
+  var h='<div class="section-title"><span class="icon">💬</span> Comentarios de Panelistas</div>';
+  var hasAny=false;
+  ranking.forEach(function(r){
+    r.votes.forEach(function(v){
+      if(v.comentario){
+        hasAny=true;
+        h+='<div class="comment-card">';
+        h+='<div class="cm-head"><span class="cm-avatar">'+v.panelista.split(' ')[0]+'</span><div><div class="cm-pan">'+v.panelista+'</div><div class="cm-team">sobre '+r.name+'</div></div></div>';
+        h+='<div class="cm-text">'+v.comentario+'</div>';
+        h+='</div>';
+      }
+    });
+  });
+  if(!hasAny)h+='<p class="empty">Aún no hay comentarios.</p>';
+  return h;
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rúbrica Panel Shark Tank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+window.PANEL_CONFIG = null;
+</script>
+<style>
+:root{
+  --p:#4E185A; --p2:#6B2D7A; --pl:#F3ECF5; --pm:#DCCBE1;
+  --c:#E8604C; --cl:#FDEDEA;
+  --bg:#F6F3F7; --surface:#FFFFFF; --soft:#F6F3F7; --line:#E6DFE9;
+  --fg:#24202A; --muted:#6B6372; --onp:#FFFFFF; --ok:#2E7D5B;
+  --shadow:0 1px 2px rgba(36,32,42,.05),0 18px 40px -26px rgba(78,24,90,.45);
+  --fd:'Fraunces',Georgia,serif; --fb:'Inter',Arial,sans-serif; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --p:#CBA6D8; --p2:#B78EC6; --pl:#2D2133; --pm:#4A3752; --c:#F07E6C; --cl:#3A2420;
+  --bg:#141016; --surface:#1F1923; --soft:#28202D; --line:#372D3D; --fg:#F2ECF4; --muted:#B0A6B6; --onp:#17121A; --ok:#6CC9A1;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -26px rgba(0,0,0,.8); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --p:#CBA6D8; --p2:#B78EC6; --pl:#2D2133; --pm:#4A3752; --c:#F07E6C; --cl:#3A2420;
+  --bg:#141016; --surface:#1F1923; --soft:#28202D; --line:#372D3D; --fg:#F2ECF4; --muted:#B0A6B6; --onp:#17121A; --ok:#6CC9A1;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -26px rgba(0,0,0,.8); color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);font-family:var(--fb);color:var(--fg);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 130px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 2px 16px;gap:12px}
+.logo{display:block;height:20px;aspect-ratio:1796/708;background:var(--p);-webkit-mask:url(data:image/png;base64,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) center/contain no-repeat;mask:url(data:image/png;base64,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) center/contain no-repeat}
+.evt{font:600 11px var(--fb);letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);text-align:right}
+.who{background:none;border:0;font:600 12.5px var(--fb);color:var(--p);cursor:pointer;text-decoration:underline;margin-top:3px}
+.demo{background:var(--cl);color:var(--c);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:12px}
+.card{background:var(--surface);border-radius:22px;padding:22px;box-shadow:var(--shadow)}
+.eb{font:600 12px var(--fb);letter-spacing:1.4px;text-transform:uppercase;color:var(--c);margin-bottom:6px}
+h1{font:600 28px/1.15 var(--fd);color:var(--fg);letter-spacing:-.01em;text-wrap:balance}
+h2{font:600 19px/1.2 var(--fd);color:var(--fg)}
+.lead{color:var(--muted);margin-top:6px;max-width:60ch}
+.setup{max-width:640px;margin:20px auto 0}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;margin-top:22px}
+.pbtn{border:2px solid var(--line);background:var(--soft);border-radius:20px;padding:20px 14px;text-align:center;font:600 14px var(--fb);color:var(--fg);cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.pbtn .avatar{font-size:48px;line-height:1;margin-bottom:8px;display:block;transition:transform .2s}
+.pbtn small{display:block;font:500 11px var(--fb);color:var(--muted);margin-top:4px}
+.pbtn:hover{border-color:var(--p);transform:translateY(-3px);box-shadow:0 8px 20px rgba(78,24,90,.15)}
+.pbtn:hover .avatar{transform:scale(1.15)}
+.pbtn[aria-pressed="true"]{border-color:var(--p);background:var(--pl);box-shadow:0 0 0 3px rgba(78,24,90,.2)}
+.pbtn.taken{opacity:.35;cursor:not-allowed;pointer-events:none}
+.pbtn.taken::after{content:'Ocupado';display:block;font:700 10px var(--fb);color:var(--c);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.nbtn{border:1.5px solid var(--line);background:var(--soft);border-radius:12px;padding:10px 14px;text-align:center;font:600 14px var(--fb);color:var(--fg);cursor:pointer;transition:border-color .15s,background .15s}
+.nbtn:hover{border-color:var(--p);background:var(--pl)}
+.nbtn[aria-pressed="true"]{border-color:var(--p);background:var(--p);color:var(--onp)}
+.nbtn.taken-name{opacity:.35;cursor:not-allowed;pointer-events:none}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.side{position:sticky;top:16px;max-height:calc(100vh - 120px);overflow:auto;scrollbar-width:thin;padding-bottom:4px;display:flex;flex-direction:column;gap:14px}
+.teams{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.team{position:relative;border:1.5px solid var(--line);background:var(--soft);border-radius:14px;padding:12px;text-align:left;font:600 14px var(--fb);color:var(--fg);cursor:pointer;min-height:54px}
+.team small{display:block;font:500 11.5px var(--fb);color:var(--muted);margin-top:2px}
+.team[aria-pressed="true"]{background:var(--p);border-color:var(--p);color:var(--onp)}
+.team[aria-pressed="true"] small{color:var(--onp);opacity:.85}
+.team .ck{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center}
+.team .ck svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.prog{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:12px}
+.prog i{flex:1;height:5px;border-radius:99px;background:var(--line);overflow:hidden}.prog i b{display:block;height:100%;background:var(--ok);transition:width .3s}
+.mini{font:600 12px var(--fb);letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.chk{list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:2px}
+.chk label{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1.3}
+.chk label:hover{background:var(--soft)}
+.chk input{width:16px;height:16px;margin-top:1px;accent-color:var(--p)}
+.chk .key{display:inline-block;font:700 9.5px var(--fb);letter-spacing:.6px;text-transform:uppercase;color:var(--c);background:var(--cl);border-radius:99px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+.chk small{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
+.chk li{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;padding:6px 4px;font-size:13px;line-height:1.3}
+.chk li>i{font:700 11px var(--fb);font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--pl);color:var(--p);display:flex;align-items:center;justify-content:center}
+.chk li.ok>i{background:var(--ok);color:#fff}.chk li.mid>i{background:var(--c);color:#fff}.chk li.no>i{background:var(--fg);color:var(--surface)}
+.reqs .rq{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.reqs .rq:first-of-type{border-top:0}
+.reqs .rn{width:26px;height:26px;border-radius:50%;background:var(--pl);color:var(--p);font:700 12px var(--fb);display:flex;align-items:center;justify-content:center}
+.reqs .rt b{font-size:14.5px}.reqs .rt p{font-size:12.5px;color:var(--muted);margin-top:2px}
+.reqs .key{display:inline-block;font:700 9.5px var(--fb);letter-spacing:.6px;text-transform:uppercase;color:var(--c);background:var(--cl);border-radius:99px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--soft)}
+.seg button{border:0;background:transparent;font:600 12.5px var(--fb);color:var(--muted);padding:9px 11px;cursor:pointer;white-space:nowrap}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button[aria-pressed="true"][data-v="1"]{background:var(--ok);color:#fff}
+.seg button[aria-pressed="true"][data-v="0.5"]{background:var(--c);color:#fff}
+.seg button[aria-pressed="true"][data-v="0"]{background:var(--fg);color:var(--surface)}
+.sep{display:flex;align-items:center;gap:12px;margin:26px 0 12px}.sep span{font:600 12px var(--fb);letter-spacing:1.4px;text-transform:uppercase;color:var(--c);white-space:nowrap}.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px}
+.tip{background:var(--pl);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--fg)}
+.tip b{color:var(--p)}
+.mh{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.legend{display:flex;gap:6px;flex-wrap:wrap}
+.legend span{font-size:11.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.legend b{color:var(--p)}
+.empty{text-align:center;padding:60px 24px}
+.empty svg{width:46px;height:46px;stroke:var(--pm);fill:none;stroke-width:1.6;margin-bottom:12px}
+.comp{background:var(--surface);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow);border:1.5px solid transparent;transition:border-color .2s}
+.comp+.comp{margin-top:12px}
+.comp.done{border-color:var(--pm)}
+.ch{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start}
+.sx{font:700 13px var(--fb);color:var(--onp);background:var(--p);border-radius:10px;padding:6px 9px;letter-spacing:.5px}
+.ch h3{font:600 17px var(--fb)}
+.ch .br{font-size:12px;color:var(--muted);margin-top:2px}
+.ch .br b{font-weight:600;color:var(--p)}
+.score{font:600 26px/1 var(--fd);color:var(--pm);min-width:34px;text-align:right}
+.comp.done .score{color:var(--p)}
+.qq{font:500 italic 15.5px/1.4 var(--fd);color:var(--fg);margin:12px 0 6px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.wb{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--pm);background:var(--surface);color:var(--p);border-radius:999px;padding:4px 11px 4px 5px;font:600 12px var(--fb);font-style:normal;cursor:pointer;white-space:nowrap;margin-top:1px}
+.wb i{width:20px;height:20px;border-radius:50%;background:var(--p);color:var(--onp);font:700 15px/20px var(--fb);font-style:normal;text-align:center;transition:transform .2s}
+.wb[aria-expanded="true"]{background:var(--pl)}.wb[aria-expanded="true"] i{transform:rotate(45deg)}
+.sus{margin:4px 0 12px;border-left:3px solid var(--p);background:var(--pl);border-radius:0 14px 14px 0;padding:14px 16px;animation:in .25s ease}
+.sus h4{font:700 11px var(--fb);letter-spacing:1.2px;text-transform:uppercase;color:var(--p);margin-bottom:8px}
+.sus h4+.pr{margin-top:0}
+.pr{display:grid;grid-template-columns:minmax(150px,.8fr) 2fr;gap:12px;padding:8px 0;border-top:1px solid var(--pm)}
+.pr:first-of-type{border-top:0;padding-top:0}
+.pr b{display:block;font-size:13.5px;color:var(--fg)}.pr small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.pr p{font-size:13px;color:var(--fg)}
+.sus .tl{margin-top:12px;padding-top:12px;border-top:1px solid var(--pm);font-size:13px;color:var(--fg)}
+.sus .tl b{color:var(--p)}
+.ev{font-size:13px;color:var(--muted)}
+.ev b{color:var(--fg);font-weight:600}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}
+.lv{border:1.5px solid var(--line);background:var(--soft);border-radius:12px;padding:9px 4px 8px;cursor:pointer;color:var(--fg);text-align:center;transition:background .15s,border-color .15s,transform .1s}
+.lv b{display:block;font:700 18px var(--fb)}
+.lv span{display:block;font-size:10.5px;color:var(--muted);line-height:1.15;margin-top:2px}
+.lv.anchor{border-color:var(--pm)}
+.lv[aria-pressed="true"]{background:var(--p);border-color:var(--p);color:var(--onp)}
+.lv[aria-pressed="true"] span{color:var(--onp);opacity:.85}
+.lv:hover{transform:translateY(-1px)}
+.desc{margin-top:10px;border-radius:12px;background:var(--soft);padding:10px 12px;font-size:13px;color:var(--fg);min-height:40px;display:flex;gap:8px;align-items:flex-start}
+.desc em{font-style:normal;font-weight:700;color:var(--p);white-space:nowrap}
+.desc.ph{color:var(--muted)}
+.cmt{margin-top:12px}
+.cmt textarea{width:100%;min-height:92px;resize:vertical;border:1.5px solid var(--line);background:var(--soft);border-radius:14px;padding:12px 14px;font:15px/1.4 var(--fb);color:var(--fg);margin-top:10px}
+.cmt textarea:focus{outline:none;border-color:var(--p);background:var(--surface)}
+.cnt{font-size:11.5px;color:var(--muted);text-align:right;margin-top:4px}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:linear-gradient(to top,var(--bg) 70%,transparent);padding:18px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar .in2{max-width:1120px;margin:0 auto;display:flex;gap:16px;align-items:center;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:10px 10px 10px 18px}
+.bar .st{flex:1;display:flex;gap:18px;align-items:center;min-width:0}
+.bar .st div small{display:block;font:600 10.5px var(--fb);letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.bar .st div b{font:600 20px var(--fd);color:var(--p)}
+.pips{display:flex;gap:4px}.pips i{width:22px;height:6px;border-radius:99px;background:var(--line)}.pips i.on{background:var(--p)}
+.btn{border:0;border-radius:14px;background:var(--c);color:#fff;font:700 15.5px var(--fb);padding:14px 22px;cursor:pointer}
+.btn:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--muted)}
+.hint.err{color:var(--c);font-weight:600}
+.thanks{text-align:center;padding:40px 24px}
+.big{width:80px;height:80px;border-radius:50%;background:var(--p);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;animation:pop .45s ease}
+.big svg{width:40px;height:40px;stroke:var(--onp);fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.sum{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:22px auto 8px;max-width:640px}
+.sum div{background:var(--soft);border-radius:14px;padding:10px 6px}
+.sum small{display:block;font:700 11px var(--fb);color:var(--muted)}
+.sum b{font:600 24px var(--fd);color:var(--p)}
+.avg{font-size:14px;color:var(--muted);margin-top:6px}.avg b{color:var(--p)}
+.again{margin-top:22px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+.view{animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+@media (max-width:880px){
+  .grid{grid-template-columns:1fr}.side{position:static}
+  details.ref:not([open]) .chk{display:none}
+  .bar .st .pips{display:none}.reqs .rq{grid-template-columns:28px 1fr}.reqs .seg{grid-column:1/-1}.seg button{flex:1}.side{max-height:none;overflow:visible}
+}
+@media (max-width:520px){
+  .pr{grid-template-columns:1fr;gap:4px}.qq{flex-direction:column}
+  h1{font-size:24px}.comp{padding:18px 16px}.lv span{font-size:9.5px}
+  .sum{grid-template-columns:repeat(3,1fr)}.bar .hint{display:none}.bar .in2{padding-left:14px}.btn{padding:14px 16px}
+}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary .tg{font-size:12px;color:var(--p);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="logo" role="img" aria-label="LHH"></span><div class="evt"><span id="evtLabel">Shark Tank · Panel</span><div><button class="who" id="who" type="button" hidden></button></div></div></header>
+
+  <section class="view card setup" id="v-setup" hidden>
+    <div class="eb">Rúbrica del panel</div>
+    <h1>Elige tu personaje</h1>
+    <p class="lead">Cada panelista elige un avatar distinto. Lo usaremos para identificarte durante todo el evento — tus notas no se comparten con los demás.</p>
+    <div class="pgrid" id="pgrid"></div>
+    <div id="nameStep" hidden style="margin-top:24px">
+      <label style="display:block;font:600 13px var(--fb);color:var(--p);margin-bottom:10px">¿Quién eres? <span style="font-weight:400;color:var(--muted)">· selecciona tu nombre</span></label>
+      <div id="panNameGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div>
+      <input type="hidden" id="panName">
+      <button type="button" class="btn" id="confirmAvatar" style="margin-top:14px;width:100%;padding:14px;border-radius:14px" disabled>Confirmar y empezar</button>
+    </div>
+  </section>
+
+  <section class="view" id="v-main" hidden>
+    <div class="grid">
+      <aside class="side">
+        <div class="card">
+          <div class="mini">Equipo que presenta</div>
+          <div class="teams" id="teams"></div>
+          <div class="prog"><i><b id="progBar" style="width:0"></b></i><span id="progTxt"></span></div>
+        </div>
+        <details class="card ref" id="ref" open>
+          <summary><span class="mini">Requisitos mínimos</span><span class="tg" id="refTg">7</span></summary>
+          <ul class="chk" id="chk"></ul>
+          <p class="note">Tenlos presentes durante la exposición: los verificas al final del formulario.</p>
+        </details>
+        <div class="tip"><b>Cuándo calificar:</b> durante las preguntas (10') y la transición (3'). Se califica la evidencia, no el diseño de las diapositivas.</div>
+      </aside>
+      <main>
+        <div class="card empty" id="empty">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+          <h2>Elige el equipo que está presentando</h2>
+          <p class="lead" style="margin:6px auto 0">Verás las 6 competencias con lo que debes observar y, al final, la verificación de los 7 requisitos mínimos.</p>
+        </div>
+        <div id="form" hidden>
+          <div class="mh">
+            <div><div class="eb" id="fEb"></div><h1 id="fTitle"></h1></div>
+            <div class="legend"><span><b>1</b> Insuficiente</span><span><b>3</b> En desarrollo</span><span><b>5</b> Sobresaliente</span><span>2 y 4: intermedios</span></div>
+          </div>
+          <div class="sep"><span>1 · Competencias</span></div>
+          <div id="comps"></div>
+          <div class="sep"><span>2 · Criterios finales</span></div>
+          <div class="comp reqs" id="reqs">
+            <div class="ch"><span class="sx">✓</span><div><h3>Requisitos mínimos de la presentación</h3><div class="br">¿El equipo cumplió con lo que se pidió presentar? No suma a la nota: se usa para la retroalimentación y como alerta.</div></div><span class="score" id="reqScore">–</span></div>
+            <div id="reqList" style="margin-top:8px"></div>
+          </div>
+          <div class="sep"><span>3 · Comentario</span></div>
+          <div class="comp cmt">
+            <div class="ch"><span class="sx">✎</span><div><h3>Comentario para el equipo</h3><div class="br">Opcional · una fortaleza y una oportunidad, en una o dos frases</div></div><span></span></div>
+            <textarea id="cmt" maxlength="400" placeholder="Ej.: El cronograma es sólido; falta mostrar cómo involucran a logística."></textarea>
+            <div class="cnt"><span id="cmtN">0</span> / 400</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="view card thanks" id="v-done" hidden>
+    <div class="big"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="eb" id="dEb">Calificación enviada</div>
+    <h1 id="dTitle"></h1>
+    <div class="sum" id="dSum"></div>
+    <p class="avg" id="dAvg"></p>
+    <button class="btn again" id="again" type="button">Calificar el siguiente equipo</button>
+    <p class="avg" style="margin-top:14px">¿Te equivocaste? Elige de nuevo el equipo y vuelve a enviar: se toma la última calificación.</p>
+  </section>
+
+  <section class="view card thanks" id="v-finished" hidden>
+    <div class="big"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="eb">Evaluación completa</div>
+    <h1>¡Gracias por tu evaluación!</h1>
+    <p class="avg" style="margin-top:12px">Has calificado todos los equipos. Tu evaluación ha sido registrada exitosamente.</p>
+    <div class="sum" id="fSum"></div>
+  </section>
+  <footer>Rúbrica del panel · Shark Tank · Programa de Desarrollo Comercial · LHH</footer>
+</div>
+
+<div class="bar" id="bar" hidden><div class="in2">
+  <div class="st"><div><small>Competencias</small><b id="nDone">0 / 6</b></div><div><small>Requisitos</small><b id="nReq">0 / 7</b></div><div class="pips" id="pips"></div><div><small>Promedio</small><b id="avg">–</b></div><span class="hint" id="hint" role="status" aria-live="polite"></span></div>
+  <button class="btn" id="send" type="button" disabled>Enviar calificación</button>
+</div></div>
+
+<script type="application/json" id="data">{"comp": [{"sus": {"pin": [{"n": "Pensar en soluciones", "d": "Evaluar cuidadosamente múltiples soluciones para una situación de negocio, basado en criterios claros.", "w": "Al pedir que comparen alternativas con criterios claros, no basta con una buena idea: deben mostrar qué opciones evaluaron y con qué criterio eligieron."}, {"n": "Calificar Oportunidades", "d": "Determinar si un prospecto tiene ciertas características que la califican como prospecto.", "w": "Al pedir que partan de una necesidad real del cliente, deben mostrar por qué ese cliente, canal o zona es la oportunidad correcta, y no solo una idea atractiva."}], "t": "Innovar para el Crecimiento · Design Thinking. La pregunta recorre el proceso del taller: empatía con el cliente para identificar la oportunidad (la necesidad real), Generar → Evaluar alternativas (los criterios) e Iterar con un prototipo o piloto."}, "id": "C1", "s": "S1", "nombre": "Innovación y Adaptabilidad", "corto": "Innovación", "brecha": "Pensar en soluciones · Calificar oportunidades", "pregunta": "¿Partieron de una necesidad real del cliente y llegaron a la solución comparando alternativas con criterios claros?", "evidencia": "Insight del cliente (entrevistas, observación en campo); problema bien definido; alternativas comparadas con criterios; por qué la oportunidad califica; prototipo o piloto.", "a1": "Solución conocida o \"más de lo mismo\". No muestran cómo entendieron al cliente ni qué alternativas consideraron.", "a3": "Parten de una necesidad del cliente y mencionan alternativas, pero sin criterios claros para elegir ni una forma de validarla.", "a5": "Muestran el recorrido de Design Thinking: insight del cliente, problema bien definido, alternativas comparadas con criterios claros y un prototipo o piloto para validar la oportunidad."}, {"sus": {"pin": [{"n": "Calificar Oportunidades", "d": "Determinar si un prospecto tiene ciertas características que la califican como prospecto.", "w": "Decidir con datos obliga a mostrar qué hace que esta oportunidad sea mejor que las otras que tenían sobre la mesa."}, {"n": "Establecer prioridades estratégicas", "d": "Identificar un grupo de prioridades estratégicas para manejarlas basadas en un análisis lógico.", "w": "La pregunta usa la definición casi literal: prioridades definidas con un análisis lógico. Se ve en qué ponen primero y qué dejan por fuera."}], "t": "Agilidad Estratégica · Ciclo ADAPT. \"Deciden con datos\" observa Analizar y Decidir; la evidencia de cómo probar y ajustar observa Prototipar y Probar. Retoma la idea del valor perecedero: decidir a tiempo, con información incompleta."}, "id": "C2", "s": "S2", "nombre": "Toma de Decisiones", "corto": "Decisiones", "brecha": "Calificar oportunidades · Establecer prioridades", "pregunta": "¿Definen prioridades con un análisis lógico y deciden con datos?", "evidencia": "Necesidad sustentada con datos; prioridades explícitas y qué dejan por fuera; riesgos y supuestos; cómo probar y ajustar (ADAPT).", "a1": "Decisión sin datos ni prioridades claras. No reconocen riesgos.", "a3": "Decisión apoyada en datos, pero las prioridades son implícitas o no hay plan si algo falla.", "a5": "Prioridades explícitas desde un análisis lógico, dicen qué dejan por fuera, explicitan riesgos y supuestos, y proponen cómo probar y ajustar."}, {"sus": {"pin": [{"n": "Escuchar activamente", "d": "Escuchar y comprender al otro a través de la formulación de preguntas reflexivas y corroborar el mutuo entendimiento.", "w": "La ronda de preguntas es el escenario natural para observarla: si confirman lo que entendieron, preguntan para aclarar y responden lo que se preguntó."}, {"n": "Planear y organizar el trabajo", "d": "Determinar los recursos necesarios para cumplir con el trabajo y poder definir quién hace qué y cuándo lo hace.", "w": "Recursos, responsables y fechas son exactamente los tres elementos de la definición: qué se necesita, quién hace qué y cuándo."}], "t": "Optimizar el Rendimiento del Equipo. Del diagnóstico a la acción con un plan de optimización y seguimiento de compromisos (accountability), y conversaciones de coaching que se basan en preguntar y escuchar antes de responder."}, "id": "C3", "s": "S3", "nombre": "Orientación a Resultados", "corto": "Resultados", "brecha": "Escuchar activamente · Planear y organizar el trabajo", "pregunta": "¿Planifican con recursos, responsables y fechas, y escuchan de verdad las preguntas del panel?", "evidencia": "Cronograma con hitos, responsables y recursos; objetivos e indicadores (KPI) con seguimiento; en las preguntas: confirman lo que entendieron, preguntan para aclarar y responden lo que se preguntó.", "a1": "Plan sin recursos ni responsables. En las preguntas responden algo distinto a lo que se preguntó.", "a3": "Plan con metas y responsables, pero sin recursos o seguimiento. Escuchan, pero responden de forma parcial.", "a5": "Plan con hitos, responsables, recursos y KPI de seguimiento. Confirman lo que entendieron antes de responder y responden con precisión."}, {"sus": {"pin": [{"n": "Negociar bien", "d": "Comprometerse con discusiones de negociación que buscan obtener acuerdos de gana-gana.", "w": "\"Acuerdo gana-gana\": se pone a prueba cuando el panel objeta o pide recortar, y se ve si buscan un acuerdo que sirva a ambas partes."}, {"n": "Expresarse con carisma", "d": "Comunicar con energía y pasión, utilizando a menudo cuentos, comparaciones y metáforas.", "w": "\"Con energía\": pasión, historias, ejemplos o metáforas que conectan con el panel."}, {"n": "Comunicar claramente", "d": "Producir un mensaje organizado basado en unos pocos puntos clave.", "w": "\"Con claridad\": un mensaje organizado en pocos puntos clave."}], "t": "Comunicar con Impacto · Modelo Qué–Por qué–Cómo. Estructura del mensaje, contexto y conexión con la audiencia, y barreras en conversaciones difíciles. \"Negociar bien empieza por escuchar mejor.\""}, "id": "C4", "s": "S4", "nombre": "Negociación Estratégica", "corto": "Negociación", "brecha": "Negociar bien · Expresarse con carisma · Comunicar claramente", "pregunta": "¿Comunican con claridad y energía, y negocian buscando un acuerdo gana-gana?", "evidencia": "Mensaje de pocos puntos clave (Qué–Por qué–Cómo); energía, historias o ejemplos que conectan; ante una objeción buscan un acuerdo que sirva a ambas partes y saben qué ceder.", "a1": "Mensaje desordenado y plano. Ante una objeción se defienden o ceden sin criterio.", "a3": "Mensaje claro, pero con poca energía o sin ejemplos que conecten. Negocian solo desde su posición.", "a5": "Mensaje Qué–Por qué–Cómo con energía e historias que conectan. Ante una objeción proponen un acuerdo gana-gana: saben qué ceder y qué no."}, {"sus": {"pin": [{"n": "Asumir una perspectiva estratégica", "d": "Realizar un detallado y amplio análisis del entorno externo e interno de la organización, para obtener una visión estratégica.", "w": "\"Entorno externo e interno\" retoma la definición: un análisis amplio del mercado y del negocio, no solo del territorio propio."}, {"n": "Establecer prioridades estratégicas", "d": "Identificar un grupo de prioridades estratégicas para manejarlas basadas en un análisis lógico.", "w": "Conectar la propuesta con las prioridades del negocio obliga a justificar por qué esta iniciativa debe ir primero."}], "t": "Dominar el Pensamiento Estratégico. Pensamiento sistémico (Coca-Cola como cadena de valor, no como silos), análisis de los 6 factores clave del entorno y traducción de esa visión en prioridades estratégicas. Pasar del \"make it happen\" a considerar el impacto en otras áreas."}, "id": "C5", "s": "S5", "nombre": "Visión Estratégica", "corto": "Visión", "brecha": "Asumir perspectiva estratégica · Establecer prioridades", "pregunta": "¿Leen el entorno externo e interno y conectan la propuesta con las prioridades del negocio?", "evidencia": "Entorno externo: mercado, cliente, competencia y canal; entorno interno: lectura 360 de la cadena de valor (operaciones, logística, finanzas, mercadeo); por qué esta prioridad frente a otras.", "a1": "La propuesta se limita al territorio o canal propio, sin leer el entorno.", "a3": "Mencionan el mercado o el impacto en otras áreas, sin profundizar ni justificar por qué es prioridad.", "a5": "Leen el entorno externo e interno, conectan la propuesta con la estrategia de Coca-Cola y justifican por qué es prioridad frente a otras iniciativas."}, {"sus": {"pin": [{"n": "Empoderar a otros", "d": "Otorgar a otros la autoridad para tomar decisiones y proveer el soporte respectivo sin quitar responsabilidad.", "w": "\"Empodera\": qué decisiones delegan en sus equipos y con qué apoyo, sin quitarles la responsabilidad."}, {"n": "Servir como Mentor y Coach", "d": "Desarrollar activamente a otros por medio de una adecuada retroalimentación de desempeño, retos desafiantes, reflexión y sugerencias organizacionales.", "w": "\"Desarrolla\": cómo acompañarían a los equipos con retroalimentación, retos y reflexión."}, {"n": "Comunicar claramente", "d": "Producir un mensaje organizado basado en unos pocos puntos clave.", "w": "\"Cada integrante comunica su parte con claridad\": se observa en la exposición de cada persona."}], "t": "Conversaciones de Coaching. Modelo de Cambio de Comportamientos LHH (de la consciencia al dominio), las 6 prácticas de coaching (preguntar, no decir; feedback directo; explorar posibilidades), delegación efectiva y seguridad psicológica. \"Los equipos de alto rendimiento no se controlan: se empoderan.\""}, "id": "C6", "s": "S6", "nombre": "Liderazgo de Equipos de Alto Rendimiento", "corto": "Liderazgo", "brecha": "Empoderar a otros · Servir como mentor y coach · Comunicar claramente", "pregunta": "¿La propuesta empodera y desarrolla a quienes la ejecutarían, y cada integrante comunica su parte con claridad?", "evidencia": "Cómo reorganizarían y gestionarían sus equipos (visión de RR. HH.); qué decisiones delegan y con qué apoyo; cómo los acompañarían con retroalimentación y retos; cada integrante expone su parte con claridad.", "a1": "Una o dos personas cargan la presentación. La propuesta no considera cómo involucrar ni desarrollar a los equipos.", "a3": "Todos participan y mencionan a los equipos, pero sin decir qué delegan ni cómo los acompañarían.", "a5": "Cada integrante expone su parte con claridad. Definen qué delegan, con qué apoyo, y cómo desarrollarían a los equipos con retroalimentación y retos."}], "crit": [{"t": "Sostener con data la necesidad", "d": "Cifras del negocio (ventas, cobertura, rotación, quiebres, satisfacción del cliente…) que prueben que el problema existe y cuál es su tamaño.", "s": ["S2"], "k": false}, {"t": "Demostrar dónde ocurre", "d": "Ubicación explícita de la necesidad: zona, canal, tipo de cliente, ruta o proceso. Nada genérico.", "s": ["S5"], "k": false}, {"t": "Explicar por qué es importante", "d": "Por qué esta necesidad y esta propuesta merecen prioridad frente a otras iniciativas del negocio.", "s": ["S4", "S5"], "k": false}, {"t": "Mostrar el beneficio final", "d": "Qué gana Coca-Cola al final: resultado comercial, eficiencia o experiencia del cliente.", "s": ["S1", "S3"], "k": false}, {"t": "Detallar cómo lo ejecutarían", "d": "Un cronograma específico que puedan sustentar ante el panel: fases, hitos, fechas y responsables.", "s": ["S3"], "k": true}, {"t": "Gestionar los equipos con visión 360", "d": "Cómo reorganizarían y gestionarían sus equipos desde la visión de recursos humanos (roles, capacidades, acompañamiento), con una lectura 360 del negocio.", "s": ["S6", "S5"], "k": true}, {"t": "Presentar objetivos e indicadores", "d": "Metas concretas y los indicadores con que se medirá el avance y el resultado de la propuesta.", "s": ["S3"], "k": false}]}</script>
+<script>
+(function(){
+  var EVENT_ID = new URLSearchParams(window.location.search).get('event');
+  if (!EVENT_ID) { document.body.innerHTML = '<div style="text-align:center;padding:60px 20px;font-family:Inter,sans-serif"><h2 style="color:#4E185A">Link inválido</h2><p style="color:#6B547E">Este link no tiene un evento asociado. Solicita el link correcto al administrador.</p></div>'; return; }
+
+  var loadEl = document.createElement('div');
+  loadEl.style.cssText = 'text-align:center;padding:60px 20px;font-family:Inter,sans-serif;color:#6B547E';
+  loadEl.innerHTML = '<p>Cargando evento...</p>';
+  document.querySelector('.wrap').prepend(loadEl);
+
+  fetch('/api/shark-tank/events/' + EVENT_ID + '/config')
+    .then(function(r) { if (!r.ok) throw new Error('Evento no encontrado'); return r.json(); })
+    .then(function(cfg) {
+      window.PANEL_CONFIG = {
+        API_URL: '/api/shark-tank/panel/vote',
+        PANELISTAS: cfg.panelistas || [],
+        EQUIPOS: cfg.teams.map(function(t) { return t.name; }),
+        TEAM_IDS: cfg.teams.map(function(t) { return t.id; }),
+        EVENT_ID: EVENT_ID,
+        COMPANY_NAME: cfg.company_name,
+        EVENT_NAME: cfg.name
+      };
+      loadEl.remove();
+      document.getElementById('evtLabel').textContent = 'Shark Tank · ' + cfg.company_name + ' · Panel';
+      initPanelApp();
+    })
+    .catch(function() {
+      loadEl.innerHTML = '<h2 style="color:#4E185A">Evento no encontrado</h2><p>El link no es válido o el evento fue eliminado.</p>';
+    });
+
+  function initPanelApp() {
+  var CFG=window.PANEL_CONFIG, DATA=JSON.parse(document.getElementById('data').textContent), C=DATA.comp, K=DATA.crit;
+  var LV=['Insuficiente','Entre 1 y 3','En desarrollo','Entre 3 y 5','Sobresaliente'];
+  var CHECK='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+  var $=function(id){return document.getElementById(id)};
+  function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem('pn_'+k)); localStorage.setItem('pn_'+k, JSON.stringify(v)); }catch(e){ return null; } }
+  function esc(t){ var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+  var AVATARS=[
+    {emoji:'⚡',name:'Zeus',color:'#EAB308'},{emoji:'🦉',name:'Atenea',color:'#6366F1'},
+    {emoji:'🔱',name:'Poseidón',color:'#0EA5E9'},{emoji:'🏹',name:'Artemisa',color:'#10B981'},
+    {emoji:'☀️',name:'Apolo',color:'#F59E0B'},{emoji:'👑',name:'Hera',color:'#A855F7'},
+    {emoji:'🪽',name:'Hermes',color:'#38BDF8'},{emoji:'🌹',name:'Afrodita',color:'#EC4899'},
+    {emoji:'🛡️',name:'Ares',color:'#EF4444'},{emoji:'🔨',name:'Hefesto',color:'#F97316'}
+  ];
+  var device=store('device'); if(!device){ device='p-'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); store('device',device); }
+  var S={ me:store('me'), meAvatar:store('meAvatar'), g:null, sc:{}, cmt:'', done:store('done')||{}, rq:{}, open:{}, selectedAvatar:null, selectedName:null, takenAvatars:[] };
+  var RQV=[['1','Cumple'],['0.5','Parcial'],['0','No cumple']];
+
+  function avatarLabel(){ var a=S.meAvatar; return a ? a.emoji+' '+a.name : S.me||''; }
+  function show(v){ ['setup','main','done','finished'].forEach(function(k){ $('v-'+k).hidden=k!==v; }); $('bar').hidden = !(v==='main' && S.g);
+    var w=$('who'); w.hidden=!S.me;
+    if(hasVoted()){ w.textContent=avatarLabel(); w.style.textDecoration='none'; w.style.cursor='default'; }
+    else { w.textContent=avatarLabel()+' · cambiar'; w.style.textDecoration=''; w.style.cursor=''; }
+    window.scrollTo(0,0); }
+  function hasVoted(){ return Object.keys(S.done).length > 0; }
+  function renderSetup(){
+    var b=$('pgrid'); b.innerHTML='';
+    AVATARS.forEach(function(a,i){
+      var key = a.emoji+' '+a.name;
+      var takenBy = S.takenAvatars.filter(function(t){ return t.avatar===key; })[0];
+      var taken = !!takenBy;
+      var isMine = taken && takenBy.device_id===device;
+      var x=document.createElement('button'); x.type='button'; x.className='pbtn'+(taken && !isMine?' taken':''); x.id='av'+i;
+      x.innerHTML='<span class="avatar">'+a.emoji+'</span>'+esc(a.name);
+      x.setAttribute('aria-pressed', S.selectedAvatar===i?'true':'false');
+      if(!taken || isMine) x.addEventListener('click',function(){
+        S.selectedAvatar=i; renderSetup();
+      });
+      b.appendChild(x);
+    });
+    var ns=$('nameStep'); if(ns) ns.hidden=S.selectedAvatar===null;
+    var ng=$('panNameGrid'); if(ng){
+      ng.innerHTML='';
+      var takenNames = S.takenAvatars.filter(function(t){ return t.device_id!==device; }).map(function(t){ return t.name; });
+      CFG.PANELISTAS.forEach(function(pn){
+        var isTaken = takenNames.indexOf(pn) >= 0;
+        var nb = document.createElement('button'); nb.type='button'; nb.className='nbtn'+(isTaken?' taken-name':'');
+        nb.textContent = pn;
+        nb.setAttribute('aria-pressed', S.selectedName===pn?'true':'false');
+        if(!isTaken) nb.addEventListener('click', function(){ S.selectedName=pn; $('panName').value=pn; renderSetup(); });
+        ng.appendChild(nb);
+      });
+    }
+    $('confirmAvatar').disabled = !(S.selectedAvatar!==null && S.selectedName);
+  }
+  function loadTakenAvatars(cb){
+    fetch('/api/shark-tank/panel/avatars?event_id='+CFG.EVENT_ID).then(function(r){return r.json()}).then(function(list){
+      S.takenAvatars=list; if(cb) cb();
+    }).catch(function(){ if(cb) cb(); });
+  }
+  function nDone(){ return Object.keys(S.done).length; }
+  function renderTeams(){ var b=$('teams'); b.innerHTML='';
+    CFG.EQUIPOS.forEach(function(n,i){ var g=i+1, dn=!!S.done[g]; var x=document.createElement('button'); x.type='button'; x.className='team'; x.id='g'+g;
+      x.innerHTML=esc(n)+'<small>Grupo '+g+(dn?' · Enviado '+S.done[g].avg:'')+'</small>'+(dn?'<span class="ck">'+CHECK+'</span>':'');
+      x.setAttribute('aria-pressed', S.g===g?'true':'false'); x.addEventListener('click',function(){ pick(g); }); b.appendChild(x); });
+    $('progBar').style.width=(nDone()/CFG.EQUIPOS.length*100)+'%'; $('progTxt').textContent=nDone()+' de '+CFG.EQUIPOS.length; }
+  function nReq(){ return K.filter(function(_,i){ return S.rq[i]!==undefined; }).length; }
+  function reqPct(){ var v=K.map(function(_,i){return S.rq[i]}).filter(function(x){return x!==undefined}); return v.length? v.reduce(function(a,b){return a+b},0)/v.length : null; }
+  function renderChk(){ var u=$('chk'); u.innerHTML='';
+    K.forEach(function(c,i){ var v=S.rq[i], li=document.createElement('li'); li.className = v===1?'ok':v===0.5?'mid':v===0?'no':'';
+      li.innerHTML='<i>'+(i+1)+'</i><span>'+esc(c.t)+(c.k?'<span class="key">clave</span>':'')+'</span>'; li.title=c.d; u.appendChild(li); });
+    $('refTg').textContent = S.g ? (nReq()+' / '+K.length) : '7'; }
+  function renderReqs(){ var box=$('reqList'); box.innerHTML='';
+    K.forEach(function(c,i){ var v=S.rq[i], r=document.createElement('div'); r.className='rq'; r.id='rq'+i;
+      var seg=RQV.map(function(o){ return '<button type="button" id="rq'+i+'-'+o[0].replace('.','')+'" data-v="'+o[0]+'" aria-pressed="'+(v===+o[0])+'">'+o[1]+'</button>'; }).join('');
+      r.innerHTML='<span class="rn">'+(i+1)+'</span><div class="rt"><b>'+esc(c.t)+'</b>'+(c.k?'<span class="key">clave</span>':'')+'<p>'+esc(c.d)+'</p></div><div class="seg" role="group" aria-label="'+esc(c.t)+'">'+seg+'</div>';
+      r.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ S.rq[i]=+b.getAttribute('data-v'); renderReqs(); renderChk(); stat(); }); });
+      box.appendChild(r); });
+    var pc=reqPct(); $('reqScore').textContent = pc===null ? '–' : Math.round(pc*100)+'%'; $('reqs').classList.toggle('done', nReq()===K.length); }
+  function descFor(c,k){ if(!k) return '<span>Elige un nivel para ver su descripción.</span>';
+    var t = k===1?c.a1 : k===3?c.a3 : k===5?c.a5 : k===2?'Supera el nivel 1, pero no cumple todo lo del nivel 3.' : 'Supera el nivel 3, pero no cumple todo lo del nivel 5.';
+    return '<em>'+k+' · '+LV[k-1]+'</em><span>'+esc(t)+'</span>'; }
+  function susHtml(c){ var h='<div class="sus" id="sus-'+c.id+'"><h4>Competencias Pinsight que observa</h4>';
+    c.sus.pin.forEach(function(x){ h+='<div class="pr"><div><b>'+esc(x.n)+'</b><small>'+esc(x.d)+'</small></div><p>'+esc(x.w)+'</p></div>'; });
+    return h+'<div class="tl"><b>Lo visto en el taller '+c.s+':</b> '+esc(c.sus.t)+'</div></div>'; }
+  function renderComps(){ var box=$('comps'); box.innerHTML='';
+    C.forEach(function(c){ var k=S.sc[c.id]||0; var el=document.createElement('div'); el.className='comp'+(k?' done':''); el.id='c-'+c.id;
+      var lv=''; for(var j=1;j<=5;j++) lv+='<button type="button" class="lv'+(j%2?' anchor':'')+'" id="'+c.id+'-'+j+'" data-k="'+j+'" aria-pressed="'+(k===j)+'" aria-label="'+j+': '+LV[j-1]+'"><b>'+j+'</b><span>'+LV[j-1]+'</span></button>';
+      el.innerHTML='<div class="ch"><span class="sx">'+c.s+'</span><div><h3>'+esc(c.nombre)+'</h3><div class="br">Pinsight: <b>'+esc(c.brecha)+'</b></div></div><span class="score">'+(k||'–')+'</span></div>'+
+        '<p class="qq"><span>'+esc(c.pregunta)+'</span><button type="button" class="wb" id="wb-'+c.id+'" aria-expanded="'+(!!S.open[c.id])+'" aria-controls="sus-'+c.id+'"><i>+</i>Por qué esta pregunta</button></p>'+(S.open[c.id]?susHtml(c):'')+'<p class="ev"><b>Observa:</b> '+esc(c.evidencia)+'</p><div class="scale">'+lv+'</div><div class="desc'+(k?'':' ph')+'">'+descFor(c,k)+'</div>';
+      el.querySelector('.wb').addEventListener('click',function(){ S.open[c.id]=!S.open[c.id]; renderComps(); });
+      el.querySelectorAll('.lv').forEach(function(b){ b.addEventListener('click',function(){ S.sc[c.id]=+b.getAttribute('data-k'); renderComps(); stat(); }); });
+      box.appendChild(el); }); }
+  function avg(){ var v=C.map(function(c){return S.sc[c.id]}).filter(Boolean); return v.length? v.reduce(function(a,b){return a+b},0)/v.length : 0; }
+  function fmt(x){ return x.toFixed(1).replace('.',','); }
+  function stat(){ var n=C.filter(function(c){return S.sc[c.id]}).length, nr=nReq(); $('nDone').textContent=n+' / 6'; $('nReq').textContent=nr+' / '+K.length; $('avg').textContent=n?fmt(avg()):'–';
+    var p=$('pips'); p.innerHTML=''; C.forEach(function(c){ var i=document.createElement('i'); if(S.sc[c.id]) i.className='on'; p.appendChild(i); });
+    var h=$('hint'); h.classList.remove('err'); var miss=(6-n)+(K.length-nr); h.textContent = miss ? (miss===1?'Falta 1 respuesta':'Faltan '+miss+' respuestas') : 'Listo para enviar'; $('send').disabled = miss>0; }
+  function pick(g){
+    if(S.g!==g){ var prev=S.done[g]; S.sc = prev ? JSON.parse(JSON.stringify(prev.sc)) : {}; S.rq = prev && prev.rq ? JSON.parse(JSON.stringify(prev.rq)) : {}; S.cmt = prev ? prev.cmt : ''; }
+    S.g=g; renderTeams(); renderChk(); $('empty').hidden=true; $('form').hidden=false;
+    $('fEb').textContent = S.done[g] ? 'Ya enviaste este equipo · puedes corregir y reenviar' : 'Calificando'; $('fTitle').textContent='Grupo '+g+' · '+CFG.EQUIPOS[g-1];
+    $('cmt').value=S.cmt; $('cmtN').textContent=S.cmt.length; renderComps(); renderReqs(); renderChk(); stat(); $('bar').hidden=false; window.scrollTo({top:0,behavior:'smooth'}); }
+  function main(){
+    if(nDone()>=CFG.EQUIPOS.length && CFG.EQUIPOS.length>0){
+      var fs=$('fSum'); fs.innerHTML='';
+      CFG.EQUIPOS.forEach(function(eq,i){ var g=i+1; var d=S.done[g]; if(d){ var row=document.createElement('div'); row.innerHTML='<small>Grupo '+g+'</small><b>'+eq+' · '+d.avg+'</b>'; fs.appendChild(row); }});
+      show('finished'); $('bar').hidden=true; return;
+    }
+    show('main'); renderTeams(); renderChk(); if(S.g) pick(S.g); else { $('empty').hidden=false; $('form').hidden=true; $('bar').hidden=true; }
+  }
+  function sendVote(p){
+    return fetch(CFG.API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(p)})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(){ return 'ok'; });
+  }
+  function flush(){ var q=store('queue')||[]; if(!q.length) return; sendVote(q[0]).then(function(){ q.shift(); store('queue',q); if(q.length) setTimeout(flush,400); }).catch(function(){}); }
+  $('send').addEventListener('click',function(){
+    var b=$('send'); b.disabled=true; $('hint').textContent='Enviando…';
+    var panelistaId = S.meAvatar ? S.meAvatar.emoji+' '+S.meAvatar.name : S.me;
+    var p={ event_id:CFG.EVENT_ID, device_id:device, panelista:panelistaId, grupo:CFG.TEAM_IDS?CFG.TEAM_IDS[S.g-1]:S.g };
+    C.forEach(function(c){ p[c.id.toLowerCase()]=S.sc[c.id]; }); p.comentario=(S.cmt||'').trim().replace(/\s+/g,' ');
+    K.forEach(function(_,i){ p['r'+(i+1)]=S.rq[i]; });
+    sendVote(p).then(function(){
+      var a=fmt(avg()); S.done[S.g]={avg:a, sc:JSON.parse(JSON.stringify(S.sc)), rq:JSON.parse(JSON.stringify(S.rq)), cmt:S.cmt}; store('done',S.done);
+      $('dEb').textContent = 'Calificación enviada';
+      $('dTitle').textContent='Calificaste a '+CFG.EQUIPOS[S.g-1];
+      var s=$('dSum'); s.innerHTML=''; C.forEach(function(c){ var d=document.createElement('div'); d.innerHTML='<small>'+c.s+' · '+esc(c.corto)+'</small><b>'+S.sc[c.id]+'</b>'; s.appendChild(d); });
+      $('dAvg').innerHTML='Tu promedio para este equipo: <b>'+a+'</b> · Requisitos mínimos: <b>'+Math.round(reqPct()*100)+'%</b> · Llevas '+nDone()+' de '+CFG.EQUIPOS.length+' equipos';
+      if(nDone()>=CFG.EQUIPOS.length){
+        var fs=$('fSum'); fs.innerHTML=''; var allAvg=0, cnt=0;
+        CFG.EQUIPOS.forEach(function(eq,i){ var g=i+1; var d=S.done[g]; if(d){ allAvg+=parseFloat(d.avg.replace(',','.')); cnt++; var row=document.createElement('div'); row.innerHTML='<small>Grupo '+g+'</small><b>'+eq+' · '+d.avg+'</b>'; fs.appendChild(row); }});
+        show('finished'); $('bar').hidden=true;
+      } else {
+        $('again').textContent = 'Calificar el siguiente equipo';
+        show('done'); $('bar').hidden=true;
+      }
+    }).catch(function(){ var q=store('queue')||[]; q.push(p); store('queue',q); var h=$('hint'); h.classList.add('err'); h.textContent='Sin conexión: guardamos tu calificación y la enviaremos al reconectar.'; b.disabled=false; });
+  });
+  $('again').addEventListener('click',function(){ S.g=null; S.sc={}; S.rq={}; S.cmt=''; main(); });
+  $('who').addEventListener('click',function(){ if(hasVoted()) return; S.selectedAvatar=null; S.selectedName=null; loadTakenAvatars(function(){ renderSetup(); show('setup'); $('bar').hidden=true; }); });
+  $('cmt').addEventListener('input',function(e){ S.cmt=e.target.value; $('cmtN').textContent=S.cmt.length; });
+  $('confirmAvatar').addEventListener('click',function(){
+    var name=S.selectedName; if(!name || S.selectedAvatar===null) return;
+    var av=AVATARS[S.selectedAvatar];
+    var btn=$('confirmAvatar'); btn.disabled=true; btn.textContent='Registrando...';
+    fetch('/api/shark-tank/panel/claim-avatar',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({event_id:CFG.EVENT_ID, avatar:av.emoji+' '+av.name, name:name, device_id:device})
+    }).then(function(r){
+      if(r.status===409){ alert('Ese personaje acaba de ser elegido por otro panelista. Elige otro.'); btn.disabled=false; btn.textContent='Confirmar y empezar'; loadTakenAvatars(function(){ S.selectedAvatar=null; renderSetup(); }); return; }
+      if(!r.ok) throw new Error('Error');
+      S.me=name; S.meAvatar=av; store('me',name); store('meAvatar',av);
+      main();
+    }).catch(function(){ btn.disabled=false; btn.textContent='Confirmar y empezar'; alert('Error al registrar. Intenta de nuevo.'); });
+  });
+  if(window.matchMedia('(max-width:880px)').matches) $('ref').open=false;
+  window.addEventListener('online',flush); flush();
+  if(S.me && S.meAvatar) main(); else { if(S.me) S.selectedName=S.me; loadTakenAvatars(function(){ renderSetup(); show('setup'); }); }
+  } // end initPanelApp
+})();
+</script>
+</body>
+</html>

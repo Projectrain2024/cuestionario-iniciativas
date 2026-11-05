@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resultados Participantes — Shark Tank</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .st-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+  .st-header h2{font-size:22px;color:#3A1259;margin:0}
+  .ev-select{padding:9px 14px;border:1px solid #D4C0E8;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;min-width:260px}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .stat-card{background:#fff;border:1px solid #E6DFE9;border-radius:14px;padding:18px;text-align:center}
+  .stat-card .num{font-size:32px;font-weight:700;color:#4E185A}
+  .stat-card .lbl{font-size:12px;color:#6B547E;margin-top:4px;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .section-title{font-size:17px;font-weight:700;color:#3A1259;margin:28px 0 14px;display:flex;align-items:center;gap:8px}
+  .section-title .icon{font-size:20px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  th{background:#F6F1FC;padding:12px 14px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#6B547E;font-weight:700}
+  td{padding:12px 14px;border-top:1px solid #F0E6F5;font-size:14px;color:#24202A}
+  tr:hover td{background:#FDFBFE}
+  .bar-wrap{height:8px;background:#EDE9FE;border-radius:4px;overflow:hidden;min-width:60px}
+  .bar-fill{height:100%;border-radius:4px;transition:width .4s}
+  .bar-fill.imp{background:#7B3FA8}
+  .bar-fill.via{background:#E8604C}
+  .bar-fill.avg{background:linear-gradient(90deg,#7B3FA8,#E8604C)}
+  .score{font-weight:700;font-size:15px}
+  .score.high{color:#2E7D5B}
+  .score.mid{color:#D97706}
+  .score.low{color:#EF4444}
+  .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+  .badge.gold{background:#FEF3C7;color:#92400E}
+  .badge.silver{background:#F3F4F6;color:#4B5563}
+  .badge.bronze{background:#FDEDD3;color:#9A3412}
+  .reco-card{background:#fff;border:1px solid #E6DFE9;border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start}
+  .reco-card+.reco-card{margin-top:10px}
+  .reco-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+  .reco-body{flex:1}
+  .reco-from{font-size:12px;color:#6B547E}
+  .reco-text{font-size:14px;margin-top:4px;color:#24202A}
+  .lider-card{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border:1px solid #F59E0B;border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start}
+  .lider-card+.lider-card{margin-top:10px}
+  .empty{text-align:center;padding:40px 20px;color:#6B547E}
+  .refresh-btn{background:none;border:1px solid #D4C0E8;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:#7B3FA8;font-weight:600}
+  .refresh-btn:hover{background:#F6F1FC}
+  .team-color{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <header class="app-header">
+    <div class="header-content">
+      <img src="/img/lhh-logo.webp" alt="LHH" style="height:48px">
+      <h1 style="font-family:'Playfair Display',serif;font-size:28px;color:#7B3FA8">🦈 Shark Tank — Admin</h1>
+      <div class="header-actions">
+        <a href="/shark-tank/admin" class="btn btn-secondary">← Eventos</a>
+      </div>
+    </div>
+  </header>
+  <main class="app-main">
+    <div class="st-header">
+      <h2>Resultados — Votación Participantes</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="ev-select" id="eventSelect"><option value="">Seleccionar evento...</option></select>
+        <button class="refresh-btn" onclick="loadResults()" title="Refrescar">🔄</button>
+      </div>
+    </div>
+    <div id="content"><p class="empty">Selecciona un evento para ver los resultados.</p></div>
+  </main>
+</div>
+
+<script src="/js/sidebar.js"></script>
+<script>
+var events=[], config=null, votes=[];
+
+async function init(){
+  var r=await fetch('/api/shark-tank/events');
+  events=await r.json();
+  var sel=document.getElementById('eventSelect');
+  events.forEach(function(ev){
+    var o=document.createElement('option');
+    o.value=ev.id; o.textContent=ev.name+' — '+ev.company_name;
+    sel.appendChild(o);
+  });
+  sel.onchange=loadResults;
+  if(events.length===1){sel.value=events[0].id;loadResults();}
+}
+
+async function loadResults(){
+  var eid=document.getElementById('eventSelect').value;
+  if(!eid){document.getElementById('content').innerHTML='<p class="empty">Selecciona un evento para ver los resultados.</p>';return;}
+  var [cfgR,votesR]=await Promise.all([
+    fetch('/api/shark-tank/events/'+eid+'/config').then(function(r){return r.json();}),
+    fetch('/api/shark-tank/events/'+eid+'/votes/participantes').then(function(r){return r.json();})
+  ]);
+  config=cfgR; votes=votesR;
+  render();
+}
+
+function render(){
+  var el=document.getElementById('content');
+  if(!votes.length){el.innerHTML='<p class="empty">Aún no hay votos de participantes para este evento.</p>';return;}
+
+  var teams=config.teams||[];
+  var teamMap={};
+  teams.forEach(function(t){teamMap[t.id]=t.name;});
+
+  // Aggregate per team
+  var agg={};
+  teams.forEach(function(t){agg[t.id]={name:t.name,impacto:[],viabilidad:[],voters:0,recos:[],lider_noms:[]};});
+  var totalVoters=new Set();
+  var liderAll=[];
+  votes.forEach(function(v){
+    totalVoters.add(v.device_id);
+    var tid=v.equipo_evaluado;
+    if(!agg[tid])agg[tid]={name:teamMap[tid]||tid,impacto:[],viabilidad:[],voters:0,recos:[],lider_noms:[]};
+    agg[tid].impacto.push(v.impacto);
+    agg[tid].viabilidad.push(v.viabilidad);
+    agg[tid].voters++;
+    if(v.reconocimientos){
+      agg[tid].recos.push({from:teamMap[v.mi_equipo]||v.mi_equipo,text:v.reconocimientos});
+    }
+    if(v.lider_del_dia){
+      liderAll.push({name:v.lider_del_dia,why:v.lider_por_que||'',from:teamMap[v.mi_equipo]||v.mi_equipo});
+    }
+  });
+
+  // Ranking
+  var ranking=Object.keys(agg).map(function(tid){
+    var a=agg[tid];
+    var avgI=a.impacto.length?a.impacto.reduce(function(s,x){return s+x;},0)/a.impacto.length:0;
+    var avgV=a.viabilidad.length?a.viabilidad.reduce(function(s,x){return s+x;},0)/a.viabilidad.length:0;
+    var prom=(avgI+avgV)/2;
+    return {id:tid,name:a.name,avgI:avgI,avgV:avgV,prom:prom,voters:a.voters,recos:a.recos};
+  }).sort(function(a,b){return b.prom-a.prom;});
+
+  // Líder del día aggregation
+  var liderCount={};
+  liderAll.forEach(function(l){
+    if(!liderCount[l.name])liderCount[l.name]={count:0,reasons:[]};
+    liderCount[l.name].count++;
+    if(l.why)liderCount[l.name].reasons.push({text:l.why,from:l.from});
+  });
+  var liderRanking=Object.keys(liderCount).map(function(n){return {name:n,count:liderCount[n].count,reasons:liderCount[n].reasons};})
+    .sort(function(a,b){return b.count-a.count;});
+
+  var html='';
+
+  // Stats row
+  html+='<div class="stats-row">';
+  html+='<div class="stat-card"><div class="num">'+totalVoters.size+'</div><div class="lbl">Votantes</div></div>';
+  html+='<div class="stat-card"><div class="num">'+votes.length+'</div><div class="lbl">Votos totales</div></div>';
+  html+='<div class="stat-card"><div class="num">'+teams.length+'</div><div class="lbl">Equipos</div></div>';
+  if(liderRanking.length){
+    html+='<div class="stat-card"><div class="num" style="font-size:20px">🏆 '+liderRanking[0].name+'</div><div class="lbl">Líder del Día ('+liderRanking[0].count+' votos)</div></div>';
+  }
+  html+='</div>';
+
+  // Ranking table
+  html+='<div class="section-title"><span class="icon">📊</span> Ranking de Equipos</div>';
+  html+='<table><thead><tr><th>#</th><th>Equipo</th><th>Impacto (1-5)</th><th></th><th>Viabilidad (1-5)</th><th></th><th>Promedio</th><th>Votos</th></tr></thead><tbody>';
+  ranking.forEach(function(r,i){
+    var medals=['gold','silver','bronze'];
+    var badge=i<3?'<span class="badge '+medals[i]+'">'+(i+1)+'°</span>':'<span style="color:#6B547E">'+(i+1)+'</span>';
+    var cls=r.prom>=4?'high':r.prom>=3?'mid':'low';
+    html+='<tr>';
+    html+='<td>'+badge+'</td>';
+    html+='<td><strong>'+r.name+'</strong></td>';
+    html+='<td><span class="score">'+r.avgI.toFixed(1)+'</span></td>';
+    html+='<td><div class="bar-wrap"><div class="bar-fill imp" style="width:'+(r.avgI/5*100)+'%"></div></div></td>';
+    html+='<td><span class="score">'+r.avgV.toFixed(1)+'</span></td>';
+    html+='<td><div class="bar-wrap"><div class="bar-fill via" style="width:'+(r.avgV/5*100)+'%"></div></div></td>';
+    html+='<td><span class="score '+cls+'">'+r.prom.toFixed(2)+'</span></td>';
+    html+='<td>'+r.voters+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+
+  // Reconocimientos
+  var allRecos=[];
+  ranking.forEach(function(r){r.recos.forEach(function(rc){allRecos.push({team:r.name,from:rc.from,text:rc.text});});});
+  if(allRecos.length){
+    html+='<div class="section-title"><span class="icon">🌟</span> Reconocimientos</div>';
+    allRecos.forEach(function(rc){
+      var initial=rc.team.charAt(0).toUpperCase();
+      var colors=['#7B3FA8','#E8604C','#2E7D5B','#D97706','#3B82F6','#EC4899'];
+      var c=colors[rc.team.length%colors.length];
+      html+='<div class="reco-card">';
+      html+='<div class="reco-avatar" style="background:'+c+'">'+initial+'</div>';
+      html+='<div class="reco-body"><div class="reco-from">Para <strong>'+rc.team+'</strong> · de '+rc.from+'</div><div class="reco-text">'+rc.text+'</div></div>';
+      html+='</div>';
+    });
+  }
+
+  // Líder del Día
+  if(liderRanking.length){
+    html+='<div class="section-title"><span class="icon">🏆</span> Líder del Día — Nominaciones</div>';
+    liderRanking.forEach(function(l,i){
+      html+='<div class="lider-card">';
+      html+='<div style="font-size:28px;flex-shrink:0">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅')+'</div>';
+      html+='<div><strong>'+l.name+'</strong> <span style="color:#92400E;font-size:13px">('+l.count+' nominaciones)</span>';
+      if(l.reasons.length){
+        html+='<div style="margin-top:6px">';
+        l.reasons.forEach(function(r){
+          html+='<div style="font-size:13px;color:#4B5563;margin-top:3px">• "'+r.text+'" <span style="color:#9CA3AF">— '+r.from+'</span></div>';
+        });
+        html+='</div>';
+      }
+      html+='</div></div>';
+    });
+  }
+
+  el.innerHTML=html;
+}
+
+init();
+</script>
+</body>
+</html>
