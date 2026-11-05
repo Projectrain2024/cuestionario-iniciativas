@@ -829,5 +829,7 @@ app.get('/health', (req, res) => {
 app.listen(PORT, async () => {
   console.log(`✅ Servidor corriendo en puerto ${PORT}`);
   console.log(`   Ir a: http://localhost:${PORT}`);
-  try { await require('./seed')(); } catch(e) { console.log('Seed skipped:', e.message); }
+  setTimeout(async () => {
+    try { await require('./seed')(); } catch(e) { console.error('Seed error:', e.message); }
+  }, 3000);
 });
