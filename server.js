@@ -826,7 +826,8 @@ app.get('/health', (req, res) => {
 });
 
 /* ── Start Server ──────────────────────────────────── */
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`✅ Servidor corriendo en puerto ${PORT}`);
   console.log(`   Ir a: http://localhost:${PORT}`);
+  try { await require('./seed')(); } catch(e) { console.log('Seed skipped:', e.message); }
 });
